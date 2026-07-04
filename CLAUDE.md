@@ -24,4 +24,4 @@ docs/                   initialPlan.md (source of truth), ReferenceImage.md
 - Hand-rolled CSS on the token layer only — no UI kit; new colors/spacing become tokens in `tokens.css`, never hardcoded values.
 - Panes are currently static placeholder data; real data arrives via Tauri `invoke` + TanStack Query as roadmap steps 2–6 land.
 - TDD on the Rust side (vault core): tests first, including malformed-frontmatter/edge cases. Writes must preserve markdown bodies and be atomic.
-- Verify frontend with `npm run build` (tsc + vite). Running the app needs the Tauri Linux system libs (see README).
+- Verify frontend with `npm run build` (tsc + vite). Running the app needs the Tauri Linux system libs (see README). 
