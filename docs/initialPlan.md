@@ -57,7 +57,7 @@ The app is a **single tiled dashboard**, not a page-per-module app — all core 
 
 - **Layout**: fixed 2×2 tiling — top-left **home** (logo/tagline, "today" checklist with durations, "up next", quote, shell-style prompt line `~ /studium ▍`); top-right **notes** (search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); bottom-left **study plan** (`active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); bottom-right **week schedule** (hour rows ~08:00–22:00, day columns with dates, colored blocks, `‹ ›` week nav, `today` jump).
 - **Pane chrome**: each pane has a lowercase title with its focus keybinding hinted in the corner (`notes (n)`, `study plan (p)`) — keybindings are discoverable from the UI itself. Focused pane gets an accent border (i3 focused-window style).
-- **Top bar**: i3bar-style strip: workspace-like module indicators on the left, app name, and status info on the right (clock at minimum; keep the rest optional/configurable).
+- **No app top bar**: the i3bar-style strip at the top of the reference image is the user's OS bar, not part of the app window — the app renders only the pane grid.
 - **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, muted dark base with one accent color (purple in the reference — must derive entirely from the CSS variable theme layer so pywal retints everything).
 
 Data-model implications from the reference:
@@ -88,8 +88,8 @@ Data-model implications from the reference:
 
 ## Implementation roadmap
 
-1. **Scaffold**: `npm create tauri-app` (React-TS template) in `studium-desktop`; strip to minimal window (no decorations optional), set up CSS token layer + default i3-ish theme, and build the static tiled dashboard shell (2×2 pane grid, pane chrome with keybinding hints, top bar) per the UI design section.
-2. **Vault core (Rust)**: vault open/create, frontmatter parse/serialize round-trip, atomic writes, `notify` watcher, Tauri commands + events. This is the foundation — test it well (round-trip property tests on frontmatter preservation).
+1. **Scaffold**: `npm create tauri-app` (React-TS template) in `studium-desktop`; strip to minimal window (no decorations optional), set up CSS token layer + default i3-ish theme, and build the static tiled dashboard shell (2×2 pane grid, pane chrome with keybinding hints) per the UI design section.
+2. **Vault core (Rust)**: vault open/create, frontmatter parse/serialize round-trip, atomic writes, `notify` watcher, Tauri commands + events. This is the foundation — test it well (round-trip property tests on frontmatter preservation). Also add a `sample-vault/` fixture in the final vault format: it doubles as Rust test data and replaces the panes' inline mock data.
 3. **Notes module**: file list + CodeMirror editor, fuzzy finder. Simplest domain, proves the vault layer.
 4. **Schedule module**: port the weekly grid logic from `apps/web/src/components/schedule/Schedule.tsx`, backed by `schedule.md`.
 5. **Study plans module**: port from `apps/web/src/components/study-plans/`, backed by `plans/` tree; wiki-links between plans and schedule blocks.

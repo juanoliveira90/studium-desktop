@@ -9,11 +9,11 @@ Full architecture, vault format, and implementation roadmap: `docs/initialPlan.m
 ```
 src/                    React frontend
   main.tsx              entry; imports the style layers in order
-  App.tsx               top bar + 2x2 dashboard grid
+  App.tsx               2x2 dashboard grid (no app top bar — the bar in the reference image is the OS/i3 bar)
   styles/tokens.css     theme API — every color/font/spacing as CSS vars; themes override only these
   styles/base.css       reset + global element styles
   styles/app.css        all layout/pane styling
-  components/           shared chrome (TopBar, Pane)
+  components/           shared chrome (Pane)
   panes/                the four dashboard panes (Home, Notes, Plans, Schedule)
 src-tauri/              Rust shell; vault core + Tauri commands land here (roadmap step 2)
 docs/                   initialPlan.md (source of truth), ReferenceImage.md
