@@ -82,7 +82,9 @@ Data-model implications from the reference:
 
 ## Development methodology
 
-- **TDD on the backend (Rust vault core and Tauri commands)**: before implementing a feature, write tests covering as much of its behavior as possible — happy paths, edge cases (malformed frontmatter, dangling links, concurrent hand-edits), and failure modes. Implementation follows until the tests pass.
+- **TDD on both backend and frontend**: before implementing a feature, write tests covering as much of its behavior as possible — happy paths, edge cases, and failure modes. Implementation follows until the tests pass.
+  - Backend (Rust vault core and Tauri commands): `cargo test` — malformed frontmatter, dangling links, concurrent hand-edits, round-trip preservation.
+  - Frontend (React components and domain logic): Vitest + React Testing Library — rendering, keyboard interaction, data transforms.
 - **Periodic refactoring**: regularly consolidate and abstract code into its correct domain (vault I/O vs. schedule vs. plans vs. notes vs. keyboard/theming layers), adjusting existing tests and adding new ones as abstractions emerge. Refactors land as their own steps, not mixed into feature work.
 - **Small features, one at a time**: each feature is implemented individually and completely — right abstractions, tests written first — before starting the next. No broad half-finished fronts.
 
@@ -102,5 +104,6 @@ Reference code to port from (cloned at scratchpad `studium/`): `apps/api/src/db/
 ## Verification
 
 - `cargo test` for vault round-trip (parse → edit → serialize preserves body/comments/order).
+- `npm test` (Vitest) for frontend components and domain logic.
 - `npm run tauri dev` — manual end-to-end: create vault, add schedule block + plan + note in-app, verify files on disk are clean markdown; hand-edit a file in vim and confirm live reload; run `wal -i <img>` and confirm live retint.
 - Keyboard-only pass: unplug-the-mouse test through all three modules.
