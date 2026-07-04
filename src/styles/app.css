@@ -1,78 +1,13 @@
 /* ── shell ─────────────────────────────────────────────── */
 
-.shell {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 .dashboard {
-  flex: 1;
+  height: 100%;
   display: grid;
   grid-template-columns: 5fr 6fr;
   grid-template-rows: 3fr 2fr;
   gap: var(--pane-gap);
   padding: var(--pane-gap);
   min-height: 0;
-}
-
-/* ── top bar ───────────────────────────────────────────── */
-
-.topbar {
-  height: var(--bar-h);
-  flex: none;
-  display: flex;
-  align-items: stretch;
-  background: var(--bg-alt);
-  border-bottom: 1px solid var(--border);
-  font-size: var(--fs-sm);
-}
-
-.topbar-ws {
-  display: flex;
-}
-
-.topbar-ws-item {
-  width: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--fg-dim);
-  border-bottom: 2px solid transparent;
-}
-
-.topbar-ws-item.is-active {
-  color: var(--fg-bright);
-  background: var(--bg-raised);
-  border-bottom-color: var(--accent);
-}
-
-.topbar-app {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: 0 var(--sp-3);
-  color: var(--fg);
-}
-
-.topbar-app .logo {
-  color: var(--accent);
-}
-
-.topbar-spacer {
-  flex: 1;
-}
-
-.topbar-status {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-  padding: 0 var(--sp-3);
-  color: var(--fg-dim);
-}
-
-.topbar-status .clock {
-  color: var(--fg);
 }
 
 /* ── pane chrome ───────────────────────────────────────── */
