@@ -1,0 +1,56 @@
+/*
+ * Theme API — every color, font and spacing value the UI uses.
+ * Themes (built-in, pywal/base16, user CSS in vault/.studium/themes/)
+ * override these variables and nothing else.
+ */
+:root {
+  /* surfaces */
+  --bg: #0c0c11;
+  --bg-alt: #12121a;
+  --bg-raised: #1a1a26;
+
+  /* text */
+  --fg: #b9bcca;
+  --fg-bright: #e2e4ee;
+  --fg-dim: #62667c;
+  --fg-faint: #3d4054;
+
+  /* accent */
+  --accent: #8f7bd8;
+  --accent-dim: #57499a;
+  --accent-bg: #241f3a;
+
+  /* lines */
+  --border: #222230;
+  --border-focus: var(--accent);
+
+  /* semantic block colors (schedule, plan bullets) */
+  --block-1: #4d4380;
+  --block-2: #6a3a4a;
+  --block-3: #2f5a52;
+  --block-4: #3a4a6a;
+
+  /* status */
+  --ok: #7fb98a;
+  --warn: #c9a86a;
+  --err: #c97a7a;
+
+  /* typography */
+  --font-mono: "JetBrainsMono Nerd Font", "JetBrains Mono", "Fira Code",
+    "Source Code Pro", monospace;
+  --fs: 13px;
+  --fs-sm: 11px;
+  --fs-lg: 15px;
+  --fs-hero: 34px;
+
+  /* spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  /* chrome */
+  --bar-h: 30px;
+  --pane-gap: 10px;
+}
