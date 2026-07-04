@@ -36,6 +36,14 @@ npm run tauri build   # release binary + packages in src-tauri/target/release/
 
 `npm run build` alone typechecks (`tsc`) and builds just the frontend into `dist/` — useful as a quick CI-style check.
 
+## Lint & test
+
+```sh
+npm run lint         # ESLint (flat config, eslint.config.js)
+npm test             # Vitest + React Testing Library, single run
+npm run test:watch   # Vitest in watch mode
+```
+
 ## Project layout
 
 ```

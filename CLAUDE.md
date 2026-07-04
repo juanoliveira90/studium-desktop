@@ -28,6 +28,9 @@ npm install                 # install frontend deps (once, or after package.json
 npm run dev                 # Vite dev server only, http://localhost:1420 (works without Rust toolchain)
 npm run build               # typecheck (tsc) + production frontend build — the quick CI-style check
 npm run preview             # serve the production build locally
+npm run lint                # ESLint over the frontend (flat config, eslint.config.js)
+npm test                    # Vitest run (frontend unit/component tests)
+npm run test:watch          # Vitest in watch mode
 npm run tauri dev           # full desktop app with hot reload (needs Rust + webkit2gtk, see README)
 npm run tauri build         # release binary + packages in src-tauri/target/release/
 cargo test                  # Rust tests — run from src-tauri/
@@ -39,5 +42,5 @@ cargo test                  # Rust tests — run from src-tauri/
 - Panes are currently static placeholder data; real data arrives via Tauri `invoke` + TanStack Query as roadmap steps 2–6 land.
 - TDD on both sides — tests first, implementation until green:
   - Rust (vault core, Tauri commands): happy paths plus edge cases (malformed frontmatter, dangling links, concurrent hand-edits). Writes must preserve markdown bodies and be atomic.
-  - Frontend (components, domain logic): Vitest + React Testing Library (`npm test` — runner lands with the first tested feature).
-- Verify frontend with `npm run build` (tsc + vite). Running the app needs the Tauri Linux system libs (see README).
+  - Frontend (components, domain logic): Vitest + React Testing Library (`npm test`); tests live next to the code as `*.test.tsx`, jsdom environment, setup in `src/test/setup.ts`.
+- Verify frontend with `npm run lint`, `npm test`, and `npm run build` (tsc + vite). Running the app needs the Tauri Linux system libs (see README).
