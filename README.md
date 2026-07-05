@@ -42,6 +42,7 @@ npm run tauri build   # release binary + packages in src-tauri/target/release/
 npm run lint         # ESLint (flat config, eslint.config.js)
 npm test             # Vitest + React Testing Library, single run
 npm run test:watch   # Vitest in watch mode
+cargo test           # Rust vault-core tests (run from src-tauri/)
 ```
 
 ## Project layout
@@ -49,8 +50,9 @@ npm run test:watch   # Vitest in watch mode
 ```
 src/               React frontend
   styles/tokens.css  theme API — all colors/fonts/spacing as CSS variables
-  components/        shared chrome (top bar, pane)
+  components/        shared chrome (Pane)
   panes/             the four dashboard panes
-src-tauri/         Rust shell (vault core lands here — roadmap step 2)
+src-tauri/         Rust shell: vault core (frontmatter, atomic writes, watcher) + Tauri commands
+sample-vault/      example vault in the final format — doubles as Rust test data
 docs/              plan + design reference
 ```
