@@ -1,8 +1,9 @@
 /*
  * Static placeholder data until the frontend talks to the vault (roadmap
- * steps 3–6). Mirrors sample-vault/ exactly — same shapes the Rust core
- * parses from markdown frontmatter — so swapping in real data is a data
- * source change, not a model change.
+ * steps 4–6; notes already read the vault, see src/notes/). Mirrors
+ * sample-vault/ exactly — same shapes the Rust core parses from markdown
+ * frontmatter — so swapping in real data is a data source change, not a
+ * model change.
  */
 
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -18,14 +19,6 @@ export interface ScheduleBlock {
   title: string;
   /** Slug of the linked plan (`plan: "[[calculus-ii]]"`), if any. */
   plan?: string;
-}
-
-/** notes/<file>.md — frontmatter plus the display title from its heading. */
-export interface Note {
-  title: string;
-  created: string;
-  updated: string;
-  tags: string[];
 }
 
 export interface Subtask {
@@ -55,13 +48,6 @@ export const SCHEDULE_BLOCKS: ScheduleBlock[] = [
   { day: "wed", start: "09:30", end: "11:00", title: "calculus ii", plan: "calculus-ii" },
   { day: "thu", start: "14:00", end: "16:00", title: "sicp reading" },
   { day: "fri", start: "10:00", end: "12:00", title: "linear algebra", plan: "linear-algebra" },
-];
-
-export const NOTES: Note[] = [
-  { title: "Reading SICP", created: "2026-06-12", updated: "2026-07-01", tags: ["book"] },
-  { title: "Lecture: integration techniques", created: "2026-06-30", updated: "2026-06-30", tags: ["lecture"] },
-  { title: "App ideas", created: "2026-05-20", updated: "2026-06-28", tags: ["idea", "personal"] },
-  { title: "Gym routine", created: "2026-04-02", updated: "2026-06-15", tags: ["personal"] },
 ];
 
 export const PLANS: Plan[] = [
@@ -159,10 +145,6 @@ export function formatShortDate(iso: string): string {
 
 export function formatDateRange(start: string, end: string): string {
   return `${formatShortDate(start)} — ${formatShortDate(end)}`;
-}
-
-export function noteTags(notes: Note[]): string[] {
-  return [...new Set(notes.flatMap((n) => n.tags))];
 }
 
 export interface ChecklistItem {

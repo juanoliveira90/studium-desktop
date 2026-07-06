@@ -6,8 +6,6 @@ import {
   formatDateRange,
   formatShortDate,
   MOCK_TODAY,
-  NOTES,
-  noteTags,
   PLANS,
   planColorIndex,
   planProgress,
@@ -66,12 +64,8 @@ describe("plan helpers", () => {
   });
 });
 
-describe("note helpers", () => {
-  it("collects the unique tags across notes, in first-seen order", () => {
-    expect(noteTags(NOTES)).toEqual(["book", "lecture", "idea", "personal"]);
-  });
-
-  it("formats note dates", () => {
+describe("date formatting", () => {
+  it("formats short dates", () => {
     expect(formatShortDate("2026-07-01")).toBe("Jul 1");
   });
 });
