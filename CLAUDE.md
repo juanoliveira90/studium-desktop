@@ -61,3 +61,5 @@ cargo test                  # Rust tests — run from src-tauri/
 ### Don't
 - Don't remove a test just because it's not passing (unless changed core logic)
 - Don't make a commit if something is broken; each commit should be "production-ready"
+- Don't make any changes if something is unclear; ALWAYS ask first.
+- Unless you are explicitly told to do so, do not create a different git worktree for each feature. It's a small project, no need to do that. 
