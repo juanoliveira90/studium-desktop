@@ -2,14 +2,16 @@ import { Page } from "../components/Page";
 import {
   blocksForDay,
   formatBlockTime,
-  MOCK_NOW_HOUR,
-  TODAY_DAY_INDEX,
-  TODAY_TASKS,
+  MOCK_TODAY,
+  planColorIndex,
+  todayChecklist,
+  upNextBlock,
 } from "../data/mock";
 
 export function HomePage() {
-  const events = blocksForDay(TODAY_DAY_INDEX);
-  const upNext = events.find((b) => b.start >= MOCK_NOW_HOUR);
+  const checklist = todayChecklist();
+  const events = blocksForDay(MOCK_TODAY);
+  const upNext = upNextBlock();
 
   return (
     <Page title="home" hint="alt+1">
@@ -24,12 +26,12 @@ export function HomePage() {
       <div className="home-columns">
         <div>
           <div className="section-label">today</div>
-          <ul className="today-list">
-            {TODAY_TASKS.map((t) => (
+          <ul className="today-list" aria-label="today">
+            {checklist.map((t) => (
               <li key={t.label} className={t.done ? "is-done" : ""}>
                 <span className="box">{t.done ? "☑" : "☐"}</span>
                 <span className="label">{t.label}</span>
-                <span className="dur">{t.dur}</span>
+                {t.dur && <span className="dur">{t.dur}</span>}
               </li>
             ))}
           </ul>
@@ -37,18 +39,23 @@ export function HomePage() {
         <div>
           <div className="section-label">today's events</div>
           <ul className="today-events" aria-label="today's events">
-            {events.map((b) => (
-              <li key={`${b.day}-${b.start}`}>
-                <span
-                  className="dot"
-                  style={{ color: `var(--block-${b.color})` }}
-                >
-                  ●
-                </span>
-                <span className="label">{b.label}</span>
-                <span className="time">{formatBlockTime(b)}</span>
-              </li>
-            ))}
+            {events.map((b) => {
+              const color = planColorIndex(b.plan);
+              return (
+                <li key={`${b.day}-${b.start}`}>
+                  <span
+                    className="dot"
+                    style={{
+                      color: color ? `var(--block-${color})` : "var(--fg-dim)",
+                    }}
+                  >
+                    ●
+                  </span>
+                  <span className="label">{b.title}</span>
+                  <span className="time">{formatBlockTime(b)}</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
@@ -60,8 +67,8 @@ export function HomePage() {
             <div className="entry">
               <span className="chev">›</span>
               <div>
-                {upNext.label}
-                <span className="when">today&ensp;{`${String(upNext.start).padStart(2, "0")}:00`}</span>
+                {upNext.title}
+                <span className="when">today&ensp;{upNext.start}</span>
               </div>
             </div>
           ) : (

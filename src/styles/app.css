@@ -384,7 +384,7 @@
   min-height: 0;
   display: grid;
   grid-template-columns: 6ch repeat(7, 1fr);
-  grid-template-rows: auto repeat(14, 1fr);
+  grid-template-rows: auto repeat(28, 1fr); /* half-hour rows, 08:00–22:00 */
   margin-top: var(--sp-2);
   font-size: var(--fs-sm);
 }

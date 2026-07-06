@@ -1,62 +1,192 @@
-// Static placeholder data until the vault modules land (roadmap steps 2–6).
-// Shared here so Home can aggregate over the same schedule the week page shows.
+/*
+ * Static placeholder data until the frontend talks to the vault (roadmap
+ * steps 3–6). Mirrors sample-vault/ exactly — same shapes the Rust core
+ * parses from markdown frontmatter — so swapping in real data is a data
+ * source change, not a model change.
+ */
 
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export const WEEKDAYS: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+/** One entry of schedule.md — a recurring weekly block. */
 export interface ScheduleBlock {
-  /** 0 = Monday. */
-  day: number;
-  /** Hours from midnight. */
-  start: number;
-  end: number;
-  label: string;
-  color: number;
+  day: Weekday;
+  /** "HH:MM", as quoted in frontmatter. */
+  start: string;
+  end: string;
+  title: string;
+  /** Slug of the linked plan (`plan: "[[calculus-ii]]"`), if any. */
+  plan?: string;
 }
 
-export interface TodayTask {
-  label: string;
-  dur: string;
+/** notes/<file>.md — frontmatter plus the display title from its heading. */
+export interface Note {
+  title: string;
+  created: string;
+  updated: string;
+  tags: string[];
+}
+
+export interface Subtask {
+  name: string;
   done: boolean;
 }
 
-export const DAYS = ["Mon 20", "Tue 21", "Wed 22", "Thu 23", "Fri 24", "Sat 25", "Sun 26"];
-export const START_HOUR = 8;
-export const END_HOUR = 22;
-export const WEEK_RANGE_LABEL = "May 20 — May 26, 2024";
+/** plans/<slug>/subjects/<tag>.md */
+export interface Subject {
+  tag: string;
+  subtasks: Subtask[];
+}
 
-/** "Today" in the fictional mock week (Wed 22). */
-export const TODAY_DAY_INDEX = 2;
-/** Mock "now", used to derive the next upcoming block. */
-export const MOCK_NOW_HOUR = 13;
+/** plans/<slug>/plan.md plus its subjects/ directory. */
+export interface Plan {
+  slug: string;
+  name: string;
+  start: string;
+  end: string;
+  subjects: Subject[];
+}
 
 export const SCHEDULE_BLOCKS: ScheduleBlock[] = [
-  { day: 1, start: 8, end: 10, label: "algorithms study", color: 1 },
-  { day: 3, start: 8, end: 10, label: "linear algebra problem set", color: 1 },
-  { day: 4, start: 8, end: 10, label: "os notes", color: 4 },
-  { day: 0, start: 12, end: 13, label: "lunch", color: 2 },
-  { day: 2, start: 12, end: 13, label: "lunch", color: 2 },
-  { day: 4, start: 12, end: 13, label: "lunch", color: 2 },
-  { day: 2, start: 14, end: 16, label: "discrete math", color: 4 },
-  { day: 5, start: 14, end: 16, label: "gym", color: 2 },
-  { day: 0, start: 18, end: 20, label: "review anki", color: 1 },
-  { day: 2, start: 19, end: 21, label: "project work", color: 3 },
-  { day: 4, start: 20, end: 22, label: "read paper", color: 1 },
+  { day: "mon", start: "09:30", end: "11:00", title: "calculus ii", plan: "calculus-ii" },
+  { day: "mon", start: "17:00", end: "18:30", title: "gym" },
+  { day: "tue", start: "10:00", end: "12:00", title: "linear algebra", plan: "linear-algebra" },
+  { day: "wed", start: "09:30", end: "11:00", title: "calculus ii", plan: "calculus-ii" },
+  { day: "thu", start: "14:00", end: "16:00", title: "sicp reading" },
+  { day: "fri", start: "10:00", end: "12:00", title: "linear algebra", plan: "linear-algebra" },
 ];
 
-export const TODAY_TASKS: TodayTask[] = [
-  { label: "algorithms — read chapter 4", dur: "2h", done: true },
-  { label: "linear algebra — problem set 2", dur: "1h 30m", done: true },
-  { label: "operating systems — notes", dur: "1h", done: false },
-  { label: "gym", dur: "1h", done: false },
-  { label: "revisit spaced repetition", dur: "30m", done: false },
+export const NOTES: Note[] = [
+  { title: "Reading SICP", created: "2026-06-12", updated: "2026-07-01", tags: ["book"] },
+  { title: "Lecture: integration techniques", created: "2026-06-30", updated: "2026-06-30", tags: ["lecture"] },
+  { title: "App ideas", created: "2026-05-20", updated: "2026-06-28", tags: ["idea", "personal"] },
+  { title: "Gym routine", created: "2026-04-02", updated: "2026-06-15", tags: ["personal"] },
 ];
+
+export const PLANS: Plan[] = [
+  {
+    slug: "calculus-ii",
+    name: "Calculus II",
+    start: "2026-06-01",
+    end: "2026-07-20",
+    subjects: [
+      {
+        tag: "integrals",
+        subtasks: [
+          { name: "u-substitution drills", done: true },
+          { name: "integration by parts", done: true },
+          { name: "partial fractions", done: false },
+          { name: "improper integrals", done: false },
+        ],
+      },
+      {
+        tag: "series",
+        subtasks: [
+          { name: "convergence tests summary sheet", done: true },
+          { name: "power series exercises", done: false },
+          { name: "taylor series exercises", done: false },
+        ],
+      },
+    ],
+  },
+  {
+    slug: "linear-algebra",
+    name: "Linear Algebra",
+    start: "2026-07-01",
+    end: "2026-08-30",
+    subjects: [
+      {
+        tag: "matrices",
+        subtasks: [
+          { name: "gaussian elimination practice", done: true },
+          { name: "matrix factorizations (LU)", done: false },
+        ],
+      },
+    ],
+  },
+];
+
+/** The mock clock: Monday 2026-07-06, 13:00. */
+export const MOCK_TODAY: Weekday = "mon";
+export const MOCK_NOW = "13:00";
+
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
 
 export function blocksForDay(
-  day: number,
+  day: Weekday,
   blocks: ScheduleBlock[] = SCHEDULE_BLOCKS,
 ): ScheduleBlock[] {
-  return blocks.filter((b) => b.day === day).sort((a, b) => a.start - b.start);
+  return blocks
+    .filter((b) => b.day === day)
+    .sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
 }
 
 export function formatBlockTime(b: ScheduleBlock): string {
-  const pad = (h: number) => `${String(h).padStart(2, "0")}:00`;
-  return `${pad(b.start)}–${pad(b.end)}`;
+  return `${b.start}–${b.end}`;
+}
+
+export function blockDuration(b: ScheduleBlock): string {
+  const mins = toMinutes(b.end) - toMinutes(b.start);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m}m`;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
+export function planProgress(plan: Plan): number {
+  const subtasks = plan.subjects.flatMap((s) => s.subtasks);
+  if (subtasks.length === 0) return 0;
+  return Math.round((subtasks.filter((t) => t.done).length / subtasks.length) * 100);
+}
+
+/** Stable per-plan color: index into the --block-N tokens. */
+export function planColorIndex(slug: string | undefined): number | undefined {
+  if (!slug) return undefined;
+  const i = PLANS.findIndex((p) => p.slug === slug);
+  return i === -1 ? undefined : i + 1;
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatShortDate(iso: string): string {
+  const [, month, day] = iso.split("-").map(Number);
+  return `${MONTHS[month - 1]} ${day}`;
+}
+
+export function formatDateRange(start: string, end: string): string {
+  return `${formatShortDate(start)} — ${formatShortDate(end)}`;
+}
+
+export function noteTags(notes: Note[]): string[] {
+  return [...new Set(notes.flatMap((n) => n.tags))];
+}
+
+export interface ChecklistItem {
+  label: string;
+  dur?: string;
+  done: boolean;
+}
+
+/** Today's blocks (done once they're over) plus every pending plan subtask. */
+export function todayChecklist(): ChecklistItem[] {
+  const blocks = blocksForDay(MOCK_TODAY).map((b) => ({
+    label: b.title,
+    dur: blockDuration(b),
+    done: toMinutes(b.end) <= toMinutes(MOCK_NOW),
+  }));
+  const pending = PLANS.flatMap((p) => p.subjects)
+    .flatMap((s) => s.subtasks)
+    .filter((t) => !t.done)
+    .map((t) => ({ label: t.name, done: false }));
+  return [...blocks, ...pending];
+}
+
+export function upNextBlock(): ScheduleBlock | undefined {
+  return blocksForDay(MOCK_TODAY).find(
+    (b) => toMinutes(b.start) >= toMinutes(MOCK_NOW),
+  );
 }

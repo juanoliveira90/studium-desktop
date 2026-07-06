@@ -3,11 +3,11 @@ import { render, screen } from "@testing-library/react";
 import { SchedulePage } from "./SchedulePage";
 
 describe("SchedulePage", () => {
-  it("renders a column head for each day of the week", () => {
+  it("renders a column head for each weekday of the recurring routine", () => {
     render(<SchedulePage />);
 
-    for (const day of ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]) {
-      expect(screen.getByText(new RegExp(`^${day} \\d+$`))).toBeInTheDocument();
+    for (const day of ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]) {
+      expect(screen.getByText(day)).toBeInTheDocument();
     }
   });
 
@@ -20,25 +20,34 @@ describe("SchedulePage", () => {
     expect(screen.queryByText("09:00")).not.toBeInTheDocument();
   });
 
-  it("places a block in the grid row derived from its start hour and span from its duration", () => {
+  it("places blocks on a half-hour grid from their frontmatter times", () => {
     render(<SchedulePage />);
 
-    // "project work" runs 19:00–21:00: rows are offset by START_HOUR (8)
-    // plus one header row, so it starts at grid row 13 and spans 2 hours.
-    const block = screen.getByText("project work");
-    expect(block).toHaveStyle({ gridRow: "13 / span 2" });
-    expect(block).toHaveStyle({ gridColumn: "4" });
+    // "sicp reading" runs thu 14:00–16:00: rows are half-hours offset from
+    // 08:00 plus one header row → row (14-8)*2+2 = 14, span 4 half-hours.
+    const sicp = screen.getByText("sicp reading");
+    expect(sicp).toHaveStyle({ gridRow: "14 / span 4" });
+    expect(sicp).toHaveStyle({ gridColumn: "5" });
+
+    // "gym" runs mon 17:00–18:30 → row (17-8)*2+2 = 20, span 3.
+    const gym = screen.getByText("gym");
+    expect(gym).toHaveStyle({ gridRow: "20 / span 3" });
+    expect(gym).toHaveStyle({ gridColumn: "2" });
   });
 
-  it("renders week navigation controls", () => {
+  it("colors blocks by their linked plan and leaves unlinked blocks default", () => {
     render(<SchedulePage />);
 
-    expect(
-      screen.getByRole("button", { name: "previous week" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "next week" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "today" })).toBeInTheDocument();
+    const calc = screen.getAllByText("calculus ii")[0];
+    expect(calc).toHaveStyle({ background: "var(--block-1)" });
+    expect(screen.getByText("gym").getAttribute("style")).not.toContain("background");
+  });
+
+  it("labels the schedule as the weekly routine, with no week navigation", () => {
+    render(<SchedulePage />);
+
+    expect(screen.getByText("weekly routine")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "previous week" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "next week" })).not.toBeInTheDocument();
   });
 });
