@@ -40,6 +40,7 @@ npm run tauri build   # release binary + packages in src-tauri/target/release/
 
 ```sh
 npm run lint         # ESLint (flat config, eslint.config.js)
+npm run lint:rust    # Clippy over the Rust shell, warnings are errors (-D warnings)
 npm test             # Vitest + React Testing Library, single run
 npm run test:watch   # Vitest in watch mode
 cargo test           # Rust vault-core tests (run from src-tauri/)

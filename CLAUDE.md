@@ -38,6 +38,7 @@ npm run dev                 # Vite dev server only, http://localhost:1420 (works
 npm run build               # typecheck (tsc) + production frontend build — the quick CI-style check
 npm run preview             # serve the production build locally
 npm run lint                # ESLint over the frontend (flat config, eslint.config.js)
+npm run lint:rust           # Clippy over the Rust shell (all targets, -D warnings)
 npm test                    # Vitest run (frontend unit/component tests)
 npm run test:watch          # Vitest in watch mode
 npm run tauri dev           # full desktop app with hot reload (needs Rust + webkit2gtk, see README)
@@ -52,7 +53,7 @@ cargo test                  # Rust tests — run from src-tauri/
 - TDD on both sides — tests first, implementation until green:
   - Rust (vault core, Tauri commands): happy paths plus edge cases (malformed frontmatter, dangling links, concurrent hand-edits). Writes must preserve markdown bodies and be atomic.
   - Frontend (components, domain logic): Vitest + React Testing Library (`npm test`); tests live next to the code as `*.test.tsx`, jsdom environment, setup in `src/test/setup.ts`.
-- Verify frontend with `npm run lint`, `npm test`, and `npm run build` (tsc + vite). Running the app needs the Tauri Linux system libs (see README).
+- Verify frontend with `npm run lint`, `npm test`, and `npm run build` (tsc + vite); verify Rust with `cargo test` and `npm run lint:rust` (Clippy, warnings are errors). Running the app needs the Tauri Linux system libs (see README).
 
 
 ## Rules
