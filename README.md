@@ -49,8 +49,9 @@ npm run test:watch   # Vitest in watch mode
 ```
 src/               React frontend
   styles/tokens.css  theme API — all colors/fonts/spacing as CSS variables
-  components/        shared chrome (top bar, pane)
-  panes/             the four dashboard panes
+  components/        shared chrome (page, status bar)
+  keyboard/          global keymap (Alt+1..4 page switching)
+  pages/             one page per feature (home, notes, plans, schedule)
 src-tauri/         Rust shell (vault core lands here — roadmap step 2)
 docs/              plan + design reference
 ```

@@ -1,4 +1,4 @@
-import { Pane } from "../components/Pane";
+import { Page } from "../components/Page";
 
 const TAGS = ["all", "book", "lecture", "idea", "personal"];
 
@@ -8,9 +8,9 @@ const NOTES = [
   { title: "fourier transforms intuition", date: "May 18" },
 ];
 
-export function NotesPane() {
+export function NotesPage() {
   return (
-    <Pane title="notes" hint="n">
+    <Page title="notes" hint="alt+2">
       <input
         className="note-search"
         type="text"
@@ -39,6 +39,6 @@ export function NotesPane() {
         ))}
       </ul>
       <button className="add-row">+ new note</button>
-    </Pane>
+    </Page>
   );
 }

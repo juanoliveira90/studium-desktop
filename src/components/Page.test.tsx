@@ -1,34 +1,34 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Pane } from "./Pane";
+import { Page } from "./Page";
 
-describe("Pane", () => {
+describe("Page", () => {
   it("renders the title as a heading with its keyboard hint", () => {
     render(
-      <Pane title="notes" hint="n">
+      <Page title="notes" hint="alt+2">
         <p>body</p>
-      </Pane>,
+      </Page>,
     );
 
     expect(screen.getByRole("heading", { name: "notes" })).toBeInTheDocument();
-    expect(screen.getByText("(n)")).toBeInTheDocument();
+    expect(screen.getByText("(alt+2)")).toBeInTheDocument();
   });
 
-  it("renders children inside the pane body", () => {
+  it("renders children inside the page body", () => {
     render(
-      <Pane title="plans" hint="p">
-        <span>some pane content</span>
-      </Pane>,
+      <Page title="plans" hint="alt+3">
+        <span>some page content</span>
+      </Page>,
     );
 
-    expect(screen.getByText("some pane content")).toBeInTheDocument();
+    expect(screen.getByText("some page content")).toBeInTheDocument();
   });
 
   it("replaces the default heading when a custom header is provided", () => {
     render(
-      <Pane title="week" hint="w" header={<h2>custom header</h2>}>
+      <Page title="week" hint="alt+4" header={<h2>custom header</h2>}>
         <p>body</p>
-      </Pane>,
+      </Page>,
     );
 
     expect(
@@ -41,12 +41,12 @@ describe("Pane", () => {
 
   it("is focusable and labelled by its title for keyboard navigation", () => {
     render(
-      <Pane title="home" hint="h">
+      <Page title="home" hint="alt+1">
         <p>body</p>
-      </Pane>,
+      </Page>,
     );
 
-    const pane = screen.getByRole("region", { name: "home" });
-    expect(pane).toHaveAttribute("tabindex", "0");
+    const page = screen.getByRole("region", { name: "home" });
+    expect(page).toHaveAttribute("tabindex", "0");
   });
 });

@@ -1,4 +1,4 @@
-import { Pane } from "../components/Pane";
+import { Page } from "../components/Page";
 
 const TABS = ["active", "upcoming", "archive"];
 
@@ -8,9 +8,9 @@ const PLANS = [
   { name: "machine learning", range: "May 1 — Jun 30", pct: 25, color: 4 },
 ];
 
-export function PlansPane() {
+export function PlansPage() {
   return (
-    <Pane title="study plan" hint="p">
+    <Page title="study plan" hint="alt+3">
       <div className="tabs" role="tablist">
         {TABS.map((tab) => (
           <button
@@ -46,6 +46,6 @@ export function PlansPane() {
         ))}
       </ul>
       <button className="add-row">+ new plan</button>
-    </Pane>
+    </Page>
   );
 }

@@ -53,11 +53,11 @@ vault/
 
 ## UI design (see docs/ReferenceImage.md)
 
-The app is a **single tiled dashboard**, not a page-per-module app — all core panes visible at once, i3-style:
+The app is **page-per-feature** — one full-window page per section, switched entirely by keyboard (this supersedes the reference image's 2×2 tiled layout; the content of each page stays true to its pane in the reference):
 
-- **Layout**: fixed 2×2 tiling — top-left **home** (logo/tagline, "today" checklist with durations, "up next", quote, shell-style prompt line `~ /studium ▍`); top-right **notes** (search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); bottom-left **study plan** (`active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); bottom-right **week schedule** (hour rows ~08:00–22:00, day columns with dates, colored blocks, `‹ ›` week nav, `today` jump).
-- **Pane chrome**: each pane has a lowercase title with its focus keybinding hinted in the corner (`notes (n)`, `study plan (p)`) — keybindings are discoverable from the UI itself. Focused pane gets an accent border (i3 focused-window style).
-- **No app top bar**: the i3bar-style strip at the top of the reference image is the user's OS bar, not part of the app window — the app renders only the pane grid.
+- **Pages**: **home** (`alt+1` — logo/tagline, "today" checklist with durations, "today's events" from the schedule, "up next" derived from the next upcoming block, quote, shell-style prompt line `~ /studium ▍`); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — `active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); **week schedule** (`alt+4` — hour rows ~08:00–22:00, day columns with dates, colored blocks, `‹ ›` week nav, `today` jump).
+- **Page chrome**: each page has a lowercase title with its keybinding hinted in the corner (`notes (alt+2)`) — keybindings are discoverable from the UI itself. The focused page gets an accent border (i3 focused-window style).
+- **Status bar**: a slim i3bar-like strip docked at the bottom lists the pages with their keybindings and highlights the active one; items are clickable but keyboard is the primary path. (The strip at the top of the reference image remains the user's OS bar, not part of the app.)
 - **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, muted dark base with one accent color (purple in the reference — must derive entirely from the CSS variable theme layer so pywal retints everything).
 
 Data-model implications from the reference:
@@ -69,9 +69,9 @@ Data-model implications from the reference:
 
 ## Keyboard system
 
-- Global chord map, i3-style: `Mod+1/2/3` (schedule / plans / notes), `Mod+Enter` new item, `Mod+d` command palette (dmenu homage), `Ctrl+p` fuzzy file/note finder, arrow/Tab focus movement everywhere; every interactive element reachable by keyboard (focus rings visible).
-- Command palette is the escape hatch: every action registered in a central command registry `{id, title, keybinding, run}` — palette, keymap, and future keybind customization all read from this registry.
-- Keybindings overridable in `.studium/config.toml` (`[keys] "mod+1" = "goto.schedule"`).
+- Global chord map, i3-style: `Alt+1..4` switch pages (home / notes / plans / schedule) — implemented in `src/keyboard/` (`keymap.ts` combo matching + `useKeymap.ts` window listener). Future: `Mod+Enter` new item, arrow/Tab focus movement everywhere; every interactive element reachable by keyboard (focus rings visible).
+- No command-palette / terminal-command navigation for now. When it lands (step 7), every action registers in a central command registry `{id, title, keybinding, run}` — the palette, keymap, and keybind customization all read from this registry; the current `Binding {combo, id, run, title?}` shape in `keymap.ts` is its seed.
+- Keybindings overridable in `.studium/config.toml` (`[keys] "alt+1" = "goto.home"`).
 
 ## Theming
 
@@ -90,12 +90,12 @@ Data-model implications from the reference:
 
 ## Implementation roadmap
 
-1. **Scaffold**: `npm create tauri-app` (React-TS template) in `studium-desktop`; strip to minimal window (no decorations optional), set up CSS token layer + default i3-ish theme, and build the static tiled dashboard shell (2×2 pane grid, pane chrome with keybinding hints) per the UI design section.
-2. **Vault core (Rust)**: vault open/create, frontmatter parse/serialize round-trip, atomic writes, `notify` watcher, Tauri commands + events. This is the foundation — test it well (round-trip property tests on frontmatter preservation). Also add a `sample-vault/` fixture in the final vault format: it doubles as Rust test data and replaces the panes' inline mock data.
+1. **Scaffold**: `npm create tauri-app` (React-TS template) in `studium-desktop`; strip to minimal window (no decorations optional), set up CSS token layer + default i3-ish theme, and build the static page-per-feature shell (one page per section, `Alt+1..4` switching, status bar, page chrome with keybinding hints) per the UI design section.
+2. **Vault core (Rust)**: vault open/create, frontmatter parse/serialize round-trip, atomic writes, `notify` watcher, Tauri commands + events. This is the foundation — test it well (round-trip property tests on frontmatter preservation). Also add a `sample-vault/` fixture in the final vault format: it doubles as Rust test data and replaces the mock data in `src/data/mock.ts`.
 3. **Notes module**: file list + CodeMirror editor, fuzzy finder. Simplest domain, proves the vault layer.
 4. **Schedule module**: port the weekly grid logic from `apps/web/src/components/schedule/Schedule.tsx`, backed by `schedule.md`.
 5. **Study plans module**: port from `apps/web/src/components/study-plans/`, backed by `plans/` tree; wiki-links between plans and schedule blocks.
-6. **Home pane**: today checklist, up-next, and plan progress — pure aggregation over the other modules' data, so it comes after them.
+6. **Home page**: today checklist, today's events, up-next, and plan progress — pure aggregation over the other modules' data, so it comes after them.
 7. **Keyboard layer**: command registry, chord handling, command palette, config-file overrides.
 8. **Theming**: pywal/base16 reader + watcher, user CSS loading, built-in themes.
 

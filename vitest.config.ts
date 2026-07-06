@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Only this checkout's tests — not copies inside .claude/worktrees.
+    include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     // RTL's automatic DOM cleanup between tests hooks into a global afterEach.
     globals: true,

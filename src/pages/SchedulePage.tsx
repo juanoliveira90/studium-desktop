@@ -1,38 +1,27 @@
-import { Pane } from "../components/Pane";
+import { Page } from "../components/Page";
+import {
+  DAYS,
+  SCHEDULE_BLOCKS,
+  START_HOUR,
+  END_HOUR,
+  WEEK_RANGE_LABEL,
+} from "../data/mock";
 
-const DAYS = ["Mon 20", "Tue 21", "Wed 22", "Thu 23", "Fri 24", "Sat 25", "Sun 26"];
-const START_HOUR = 8;
-const END_HOUR = 22;
 const HOURS = END_HOUR - START_HOUR; // 14 one-hour rows
-
-// day: 0 = Monday; start/end in hours from midnight
-const BLOCKS = [
-  { day: 1, start: 8, end: 10, label: "algorithms study", color: 1 },
-  { day: 3, start: 8, end: 10, label: "linear algebra problem set", color: 1 },
-  { day: 4, start: 8, end: 10, label: "os notes", color: 4 },
-  { day: 0, start: 12, end: 13, label: "lunch", color: 2 },
-  { day: 2, start: 12, end: 13, label: "lunch", color: 2 },
-  { day: 4, start: 12, end: 13, label: "lunch", color: 2 },
-  { day: 2, start: 14, end: 16, label: "discrete math", color: 4 },
-  { day: 5, start: 14, end: 16, label: "gym", color: 2 },
-  { day: 0, start: 18, end: 20, label: "review anki", color: 1 },
-  { day: 2, start: 19, end: 21, label: "project work", color: 3 },
-  { day: 4, start: 20, end: 22, label: "read paper", color: 1 },
-];
 
 function WeekHeader() {
   return (
     <div className="week-header">
       <h2>week</h2>
       <button className="nav" aria-label="previous week">‹</button>
-      <span className="range">May 20 — May 26, 2024</span>
+      <span className="range">{WEEK_RANGE_LABEL}</span>
       <button className="nav" aria-label="next week">›</button>
       <button className="today-btn">today</button>
     </div>
   );
 }
 
-export function SchedulePane() {
+export function SchedulePage() {
   const cells = [];
   for (let row = 0; row < HOURS; row++) {
     for (let day = 0; day < 7; day++) {
@@ -47,7 +36,7 @@ export function SchedulePane() {
   }
 
   return (
-    <Pane title="week" hint="w" header={<WeekHeader />}>
+    <Page title="week" hint="alt+4" header={<WeekHeader />}>
       <div className="week-grid">
         <div style={{ gridColumn: 1, gridRow: 1 }} />
         {DAYS.map((d, i) => (
@@ -68,7 +57,7 @@ export function SchedulePane() {
           );
         })}
         {cells}
-        {BLOCKS.map((b) => (
+        {SCHEDULE_BLOCKS.map((b) => (
           <div
             key={`${b.day}-${b.start}`}
             className="week-block"
@@ -83,6 +72,6 @@ export function SchedulePane() {
           </div>
         ))}
       </div>
-    </Pane>
+    </Page>
   );
 }

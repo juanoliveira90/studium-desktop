@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-interface PaneProps {
+interface PageProps {
   title: string;
   hint: string;
   /** Extra content rendered in the title row (e.g. week navigation). */
@@ -8,14 +8,14 @@ interface PaneProps {
   children: ReactNode;
 }
 
-export function Pane({ title, hint, header, children }: PaneProps) {
+export function Page({ title, hint, header, children }: PageProps) {
   return (
-    <section className="pane" tabIndex={0} aria-label={title}>
-      <div className="pane-title">
+    <section className="page" tabIndex={0} aria-label={title}>
+      <div className="page-title">
         {header ?? <h2>{title}</h2>}
         <span className="hint">({hint})</span>
       </div>
-      <div className="pane-body">{children}</div>
+      <div className="page-body">{children}</div>
     </section>
   );
 }
