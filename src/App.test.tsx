@@ -1,7 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
+import * as ipc from "./vault/ipc";
+
+vi.mock("./vault/ipc");
+
+beforeEach(() => {
+  vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
+  vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
+  vi.mocked(ipc.docList).mockResolvedValue([]);
+  vi.mocked(ipc.onVaultChanged).mockReturnValue(() => {});
+});
 
 describe("App", () => {
   it("shows the home page by default", () => {
@@ -40,7 +50,7 @@ describe("App", () => {
     render(<App />);
 
     await user.keyboard("{Alt>}2{/Alt}");
-    await user.click(screen.getByRole("textbox", { name: "search notes" }));
+    await user.click(await screen.findByRole("textbox", { name: "search notes" }));
     await user.keyboard("{Alt>}3{/Alt}");
 
     expect(

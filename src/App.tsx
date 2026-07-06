@@ -1,10 +1,25 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useKeymap } from "./keyboard/useKeymap";
 import { StatusBar } from "./components/StatusBar";
 import { PAGES, type PageId } from "./pages/pages";
+import { onVaultChanged } from "./vault/ipc";
 
 function App() {
   const [active, setActive] = useState<PageId>("home");
+  const [queryClient] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+  );
+
+  // Hand-edits picked up by the vault watcher refresh every doc query, so
+  // changes made in vim/Obsidian appear live.
+  useEffect(
+    () =>
+      onVaultChanged(() => {
+        queryClient.invalidateQueries({ queryKey: ["docs"] });
+      }),
+    [queryClient],
+  );
 
   useKeymap(
     useMemo(
@@ -23,12 +38,14 @@ function App() {
   const { Component } = PAGES.find((p) => p.id === active)!;
 
   return (
-    <div className="app">
-      <main className="page-container">
-        <Component />
-      </main>
-      <StatusBar pages={PAGES} activeId={active} onSelect={setActive} />
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <div className="app">
+        <main className="page-container">
+          <Component />
+        </main>
+        <StatusBar pages={PAGES} activeId={active} onSelect={setActive} />
+      </div>
+    </QueryClientProvider>
   );
 }
 

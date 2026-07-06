@@ -52,6 +52,8 @@ src/               React frontend
   styles/tokens.css  theme API — all colors/fonts/spacing as CSS variables
   components/        shared chrome (page, status bar)
   keyboard/          global keymap (Alt+1..4 page switching)
+  vault/             typed invoke layer over the Tauri commands + vault session hooks
+  notes/             notes module: domain model, query hooks, CodeMirror editor
   pages/             one page per feature (home, notes, plans, schedule)
 src-tauri/         Rust shell: vault core (frontmatter, atomic writes, watcher) + Tauri commands
 sample-vault/      example vault in the final format — doubles as Rust test data
