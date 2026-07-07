@@ -62,6 +62,13 @@ cargo test                  # Rust tests — run from src-tauri/
 ### Do
 - After every update, check the docs to see if there is something out of date. If there is, update it.
 - Break long chained expressions into named intermediate variables — one responsibility per line (e.g. bind a `fs::read_to_string` result before `map_err`-ing it, name a boolean before branching on it) instead of stacking calls, combinators, and error mapping into one line.
+- When a chain reads better unbroken (an intermediate variable would just make the reader jump away and back), keep the chain but break the line before each `.method()`:
+
+  ```rust
+  let dur = std::time::SystemTime::now()
+      .duration_since(std::time::UNIX_EPOCH)
+      .unwrap_or(std::time::Duration::ZERO);
+  ```
 
 ### Don't
 - Don't remove a test just because it's not passing (unless changed core logic)
