@@ -56,6 +56,42 @@ impl Document {
         }
     }
 
+    /// Splits a multi-entry file (`schedule.md`: one frontmatter block per
+    /// entry, no bodies) into one [`Document`] per block. Lossless: the
+    /// documents' `to_string`s concatenate back to the exact input. Blank
+    /// lines between blocks ride along as the preceding document's body;
+    /// trailing text that isn't a fenced block stays as the last document's
+    /// body. Empty input has no documents.
+    pub fn parse_all(input: &str) -> Vec<Document> {
+        let mut docs = Vec::new();
+        let mut rest = input;
+        loop {
+            let mut doc = Document::parse(rest);
+            if doc.raw_block.is_none() {
+                // No leading fence: everything left is body. Drop it only
+                // when it's the empty tail of an empty file.
+                if !doc.body.is_empty() {
+                    docs.push(doc);
+                }
+                return docs;
+            }
+            match next_fence_offset(&doc.body) {
+                Some(offset) => {
+                    // doc.body is the tail of `rest`; split it at the next
+                    // fence and continue parsing from there.
+                    let body_start = rest.len() - doc.body.len();
+                    doc.body.truncate(offset);
+                    docs.push(doc);
+                    rest = &rest[body_start + offset..];
+                }
+                None => {
+                    docs.push(doc);
+                    return docs;
+                }
+            }
+        }
+    }
+
     pub fn body(&self) -> &str {
         &self.body
     }
@@ -103,6 +139,30 @@ impl fmt::Display for Document {
             f.write_str(block)?;
         }
         f.write_str(&self.body)
+    }
+}
+
+/// Byte offset in `body` where the next frontmatter fence starts, if the
+/// text up to it is only blank lines (those stay with the previous block so
+/// splitting loses nothing).
+fn next_fence_offset(body: &str) -> Option<usize> {
+    let mut offset = 0;
+    loop {
+        let rest = &body[offset..];
+        if rest.starts_with("---\n") {
+            // Only a real block boundary if Document::parse agrees the fence
+            // closes; an unclosed fence is body, not a new entry.
+            let fence_closes = Document::parse(rest).raw_block.is_some();
+            if fence_closes {
+                return Some(offset);
+            }
+            return None;
+        }
+        let line_end = rest.find('\n')?;
+        if !rest[..line_end].trim().is_empty() {
+            return None;
+        }
+        offset += line_end + 1;
     }
 }
 

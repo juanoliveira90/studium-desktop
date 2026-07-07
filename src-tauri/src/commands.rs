@@ -41,6 +41,15 @@ pub struct DocPayload {
     pub body: String,
 }
 
+/// One entry of `schedule.md` — the frontmatter of one fenced block. The
+/// frontend's schedule domain model interprets the fields; a block whose YAML
+/// is broken carries the error instead so the UI can point at it.
+#[derive(Serialize)]
+pub struct ScheduleEntry {
+    pub frontmatter: serde_json::Value,
+    pub frontmatter_error: Option<String>,
+}
+
 #[derive(Serialize, Clone)]
 struct VaultChangedPayload {
     paths: Vec<String>,
@@ -118,6 +127,32 @@ pub fn doc_write(
         doc.set_frontmatter(mapping);
         doc.set_body(body);
         vault.write(&path, &doc).map_err(|e| e.to_string())
+    })
+}
+
+/// The weekly schedule: one entry per frontmatter block of `schedule.md`.
+#[tauri::command]
+pub fn schedule_list(state: State<'_, VaultState>) -> Result<Vec<ScheduleEntry>, String> {
+    with_vault(&state, |vault| {
+        let docs = vault.read_all("schedule.md").map_err(|e| e.to_string())?;
+        docs.iter()
+            .map(|doc| {
+                let (frontmatter, frontmatter_error) = match doc.frontmatter() {
+                    Ok(mapping) => {
+                        let value = serde_json::to_value(&mapping).map_err(|e| e.to_string())?;
+                        (value, None)
+                    }
+                    Err(e) => (
+                        serde_json::Value::Object(Default::default()),
+                        Some(e.to_string()),
+                    ),
+                };
+                Ok(ScheduleEntry {
+                    frontmatter,
+                    frontmatter_error,
+                })
+            })
+            .collect()
     })
 }
 

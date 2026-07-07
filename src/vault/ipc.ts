@@ -51,6 +51,18 @@ export function docWrite(
   return invoke("doc_write", { path, frontmatter, body });
 }
 
+/** Mirror of the Rust `ScheduleEntry`: one frontmatter block of schedule.md. */
+export interface ScheduleEntry {
+  frontmatter: Record<string, unknown>;
+  /** Set when the block's YAML is malformed; `frontmatter` is then empty. */
+  frontmatter_error: string | null;
+}
+
+/** The weekly schedule, one entry per block of schedule.md. */
+export function scheduleList(): Promise<ScheduleEntry[]> {
+  return invoke("schedule_list");
+}
+
 /**
  * Subscribes to the `vault:changed` watcher event. Returns an unsubscribe
  * function (safe to call before the underlying listen resolves).

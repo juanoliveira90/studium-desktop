@@ -1,21 +1,19 @@
 import { Page } from "../components/Page";
 import {
   blocksForDay,
-  planColorIndex,
-  SCHEDULE_BLOCKS,
+  gridPlacement,
+  planColorBySlug,
   WEEKDAYS,
-} from "../data/mock";
+  type ScheduleBlock,
+} from "../schedule/block";
+import { useSchedule } from "../schedule/useSchedule";
+import { useVault } from "../vault/useVault";
+import { VaultGate } from "../vault/VaultGate";
 
 const START_HOUR = 8;
 const END_HOUR = 22;
 const HOURS = END_HOUR - START_HOUR;
 const ROWS = HOURS * 2; // half-hour resolution, schedule times are "HH:MM"
-
-/** Grid row for a "HH:MM" time: half-hours from START_HOUR plus header row. */
-const rowFor = (time: string) => {
-  const [h, m] = time.split(":").map(Number);
-  return (h - START_HOUR) * 2 + m / 30 + 2;
-};
 
 function WeekHeader() {
   return (
@@ -27,6 +25,33 @@ function WeekHeader() {
 }
 
 export function SchedulePage() {
+  const vault = useVault();
+  const schedule = useSchedule(Boolean(vault.data));
+
+  let body;
+  if (vault.isPending) {
+    body = <p className="muted">opening vault…</p>;
+  } else if (!vault.data) {
+    body = <VaultGate loadError={vault.error} />;
+  } else if (schedule.isPending) {
+    body = <p className="muted">loading schedule…</p>;
+  } else if (schedule.isError) {
+    body = <p className="error">failed to load schedule: {String(schedule.error)}</p>;
+  } else {
+    body = <WeekGrid blocks={schedule.data.blocks} errors={schedule.data.errors} />;
+  }
+
+  return (
+    <Page title="week" hint="alt+4" header={<WeekHeader />}>
+      {body}
+    </Page>
+  );
+}
+
+/** The recurring weekly routine on an hour-row × weekday-column grid. */
+function WeekGrid({ blocks, errors }: { blocks: ScheduleBlock[]; errors: string[] }) {
+  const planColors = planColorBySlug(blocks);
+
   const cells = [];
   for (let row = 0; row < ROWS; row++) {
     for (let day = 0; day < 7; day++) {
@@ -41,7 +66,7 @@ export function SchedulePage() {
   }
 
   return (
-    <Page title="week" hint="alt+4" header={<WeekHeader />}>
+    <>
       <div className="week-grid">
         <div style={{ gridColumn: 1, gridRow: 1 }} />
         {WEEKDAYS.map((d, i) => (
@@ -63,15 +88,18 @@ export function SchedulePage() {
         })}
         {cells}
         {WEEKDAYS.flatMap((day, col) =>
-          blocksForDay(day, SCHEDULE_BLOCKS).map((b) => {
-            const color = planColorIndex(b.plan);
+          blocksForDay(day, blocks).map((b) => {
+            const placed = gridPlacement(b, START_HOUR, END_HOUR);
+            if (!placed) return null;
+            const color = b.plan ? planColors.get(b.plan) : undefined;
             return (
               <div
                 key={`${b.day}-${b.start}`}
                 className="week-block"
                 style={{
                   gridColumn: col + 2,
-                  gridRow: `${rowFor(b.start)} / span ${rowFor(b.end) - rowFor(b.start)}`,
+                  // +2: grid lines are 1-based and row 1 is the day header
+                  gridRow: `${placed.row + 2} / span ${placed.span}`,
                   ...(color && {
                     background: `var(--block-${color})`,
                     borderColor: "transparent",
@@ -84,6 +112,12 @@ export function SchedulePage() {
           }),
         )}
       </div>
-    </Page>
+      {errors.length > 0 && (
+        <p className="warn">
+          ⚠ {errors.length} schedule block{errors.length === 1 ? "" : "s"} in
+          schedule.md couldn&apos;t be read: {errors.join("; ")}
+        </p>
+      )}
+    </>
   );
 }
