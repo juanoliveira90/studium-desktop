@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  blockDuration,
   blocksForDay,
+  formatBlockTime,
   gridPlacement,
   planColorBySlug,
   scheduleFromEntries,
@@ -82,6 +84,20 @@ describe("blocksForDay", () => {
       block({ day: "mon", start: "09:30", title: "early" }),
     ];
     expect(blocksForDay("mon", blocks).map((b) => b.title)).toEqual(["early", "late"]);
+  });
+});
+
+describe("formatBlockTime", () => {
+  it("formats a block's times as a range", () => {
+    expect(formatBlockTime(block({ start: "09:30", end: "11:00" }))).toBe("09:30–11:00");
+  });
+});
+
+describe("blockDuration", () => {
+  it("derives a human duration from the block times", () => {
+    expect(blockDuration(block({ start: "09:30", end: "11:00" }))).toBe("1h 30m");
+    expect(blockDuration(block({ start: "10:00", end: "12:00" }))).toBe("2h");
+    expect(blockDuration(block({ start: "10:00", end: "10:45" }))).toBe("45m");
   });
 });
 

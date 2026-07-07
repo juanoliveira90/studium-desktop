@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Page } from "../components/Page";
-import { formatShortDate } from "../data/mock";
+import { formatShortDate } from "../data/format";
 import { Editor } from "../notes/Editor";
 import { filterNotes, noteTags, type Note } from "../notes/note";
 import { useCreateNote, useNotes, useSaveNote } from "../notes/useNotes";

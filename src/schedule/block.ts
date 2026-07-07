@@ -26,10 +26,24 @@ export interface ScheduleBlock {
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const toMinutes = (time: string) => {
+/** "HH:MM" → minutes since midnight. */
+export const toMinutes = (time: string) => {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
 };
+
+export function formatBlockTime(b: ScheduleBlock): string {
+  return `${b.start}–${b.end}`;
+}
+
+/** A block's length as a human duration: "1h 30m", "2h", "45m". */
+export function blockDuration(b: ScheduleBlock): string {
+  const mins = toMinutes(b.end) - toMinutes(b.start);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m}m`;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
 
 /** "[[slug]]" or a bare slug → slug; anything else is no link. */
 const planSlug = (value: unknown): string | undefined => {
