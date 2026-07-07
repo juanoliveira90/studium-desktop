@@ -344,6 +344,93 @@ fn sample_vault_opens_and_every_doc_round_trips() {
     }
 }
 
+// --------------------------------------------------- schedule (multi-doc)
+
+#[test]
+fn parse_all_splits_consecutive_frontmatter_blocks() {
+    let src = "---\nday: mon\nstart: \"09:30\"\n---\n---\nday: tue\nstart: \"10:00\"\n---\n";
+    let docs = Document::parse_all(src);
+    assert_eq!(docs.len(), 2);
+    let first = docs[0].frontmatter().unwrap();
+    assert_eq!(first.get("day").and_then(|v| v.as_str()), Some("mon"));
+    assert_eq!(first.get("start").and_then(|v| v.as_str()), Some("09:30"));
+    let second = docs[1].frontmatter().unwrap();
+    assert_eq!(second.get("day").and_then(|v| v.as_str()), Some("tue"));
+}
+
+#[test]
+fn parse_all_empty_or_blank_input_has_no_blocks() {
+    assert!(Document::parse_all("").is_empty());
+}
+
+#[test]
+fn parse_all_tolerates_blank_lines_between_blocks() {
+    let src = "---\nday: mon\n---\n\n\n---\nday: tue\n---\n";
+    let docs = Document::parse_all(src);
+    assert_eq!(docs.len(), 2);
+    assert_eq!(
+        docs[1].frontmatter().unwrap().get("day").and_then(|v| v.as_str()),
+        Some("tue")
+    );
+}
+
+#[test]
+fn parse_all_reports_malformed_yaml_per_block() {
+    let src = "---\nday: mon\n---\n---\n: [broken\n---\n---\nday: fri\n---\n";
+    let docs = Document::parse_all(src);
+    assert_eq!(docs.len(), 3);
+    assert!(docs[0].frontmatter().is_ok());
+    assert!(matches!(
+        docs[1].frontmatter(),
+        Err(VaultError::Frontmatter { .. })
+    ));
+    assert_eq!(
+        docs[2].frontmatter().unwrap().get("day").and_then(|v| v.as_str()),
+        Some("fri")
+    );
+}
+
+#[test]
+fn parse_all_input_without_fences_is_one_body_document() {
+    let docs = Document::parse_all("just some text\n");
+    assert_eq!(docs.len(), 1);
+    assert!(docs[0].frontmatter().unwrap().is_empty());
+    assert_eq!(docs[0].body(), "just some text\n");
+}
+
+#[test]
+fn parse_all_sample_vault_schedule() {
+    let raw = fs::read_to_string(sample_vault_dir().join("schedule.md")).unwrap();
+    let docs = Document::parse_all(&raw);
+    assert_eq!(docs.len(), 6);
+    for doc in &docs {
+        let fm = doc.frontmatter().unwrap();
+        assert!(fm.get("day").is_some(), "every block has a day");
+        assert!(fm.get("start").is_some(), "every block has a start");
+    }
+    assert_eq!(
+        docs[0].frontmatter().unwrap().get("plan").and_then(|v| v.as_str()),
+        Some("[[calculus-ii]]")
+    );
+}
+
+#[test]
+fn read_all_reads_schedule_blocks_through_the_vault() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    fs::write(
+        vault.root().join("schedule.md"),
+        "---\nday: mon\nstart: \"08:00\"\nend: \"09:00\"\ntitle: run\n---\n",
+    )
+    .unwrap();
+    let docs = vault.read_all("schedule.md").unwrap();
+    assert_eq!(docs.len(), 1);
+    assert_eq!(
+        docs[0].frontmatter().unwrap().get("title").and_then(|v| v.as_str()),
+        Some("run")
+    );
+}
+
 // ------------------------------------------------------------------- config
 
 #[test]
@@ -404,6 +491,17 @@ mod properties {
         #[test]
         fn parse_never_alters_content(src in ".{0,400}") {
             prop_assert_eq!(Document::parse(&src).to_string(), src);
+        }
+
+        /// parse_all never loses text: the documents concatenate back to the
+        /// exact input, whatever mix of fences, bodies, and junk it holds.
+        #[test]
+        fn parse_all_concatenation_is_lossless(src in "(---\n)?[a-z:\n \"\\[\\]-]{0,300}") {
+            let joined: String = Document::parse_all(&src)
+                .iter()
+                .map(|d| d.to_string())
+                .collect();
+            prop_assert_eq!(joined, src);
         }
 
         /// Arbitrary string frontmatter values survive a full

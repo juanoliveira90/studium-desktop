@@ -1,25 +1,19 @@
 /*
  * Static placeholder data until the frontend talks to the vault (roadmap
- * steps 4–6; notes already read the vault, see src/notes/). Mirrors
- * sample-vault/ exactly — same shapes the Rust core parses from markdown
- * frontmatter — so swapping in real data is a data source change, not a
- * model change.
+ * steps 5–6; notes and the schedule already read the vault, see src/notes/
+ * and src/schedule/). Mirrors sample-vault/ exactly — same shapes the Rust
+ * core parses from markdown frontmatter — so swapping in real data is a data
+ * source change, not a model change.
  */
 
-export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+import {
+  blocksForDay as scheduleBlocksForDay,
+  type ScheduleBlock,
+  type Weekday,
+} from "../schedule/block";
 
-export const WEEKDAYS: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-
-/** One entry of schedule.md — a recurring weekly block. */
-export interface ScheduleBlock {
-  day: Weekday;
-  /** "HH:MM", as quoted in frontmatter. */
-  start: string;
-  end: string;
-  title: string;
-  /** Slug of the linked plan (`plan: "[[calculus-ii]]"`), if any. */
-  plan?: string;
-}
+export type { ScheduleBlock, Weekday };
+export { WEEKDAYS } from "../schedule/block";
 
 export interface Subtask {
   name: string;
@@ -106,9 +100,7 @@ export function blocksForDay(
   day: Weekday,
   blocks: ScheduleBlock[] = SCHEDULE_BLOCKS,
 ): ScheduleBlock[] {
-  return blocks
-    .filter((b) => b.day === day)
-    .sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+  return scheduleBlocksForDay(day, blocks);
 }
 
 export function formatBlockTime(b: ScheduleBlock): string {

@@ -55,6 +55,7 @@ src/               React frontend
   keyboard/          global keymap (Alt+1..4 page switching)
   vault/             typed invoke layer over the Tauri commands + vault session hooks
   notes/             notes module: domain model, query hooks, CodeMirror editor
+  schedule/          schedule module: schedule.md domain model + week-grid math, query hook
   pages/             one page per feature (home, notes, plans, schedule)
 src-tauri/         Rust shell: vault core (frontmatter, atomic writes, watcher) + Tauri commands
 sample-vault/      example vault in the final format — doubles as Rust test data

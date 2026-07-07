@@ -4,7 +4,8 @@ import { formatShortDate } from "../data/mock";
 import { Editor } from "../notes/Editor";
 import { filterNotes, noteTags, type Note } from "../notes/note";
 import { useCreateNote, useNotes, useSaveNote } from "../notes/useNotes";
-import { useOpenVault, useVault } from "../vault/useVault";
+import { useVault } from "../vault/useVault";
+import { VaultGate } from "../vault/VaultGate";
 
 export function NotesPage() {
   const vault = useVault();
@@ -219,37 +220,6 @@ function NoteEditor({ note, onBack }: { note: Note; onBack: () => void }) {
         <span className="hint">esc to close</span>
       </div>
       <Editor value={draft ?? note.body} onChange={onChange} />
-    </div>
-  );
-}
-
-/** Shown when no vault is remembered (or opening it failed): pick one by path. */
-function VaultGate({ loadError }: { loadError: Error | null }) {
-  const [path, setPath] = useState("");
-  const openVault = useOpenVault();
-
-  const submit = (create: boolean) => {
-    if (path.trim()) openVault.mutate({ path: path.trim(), create });
-  };
-
-  return (
-    <div className="vault-gate">
-      <p className="muted">no vault open — enter a directory to use as your vault</p>
-      <input
-        className="note-search"
-        type="text"
-        placeholder="/path/to/vault"
-        aria-label="vault path"
-        value={path}
-        onChange={(e) => setPath(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && submit(false)}
-      />
-      <div className="vault-gate-actions">
-        <button onClick={() => submit(false)}>open</button>
-        <button onClick={() => submit(true)}>create</button>
-      </div>
-      {loadError && <p className="error">{String(loadError)}</p>}
-      {openVault.isError && <p className="error">{String(openVault.error)}</p>}
     </div>
   );
 }

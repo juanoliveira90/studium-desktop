@@ -15,14 +15,15 @@ src/                    React frontend
   styles/app.css        all layout/page styling
   components/           shared chrome (Page, StatusBar)
   keyboard/             keymap combo matching + useKeymap window listener (seed of the command registry)
-  vault/                ipc.ts — typed invoke layer (the only module importing @tauri-apps/api) + useVault open/create hooks
+  vault/                ipc.ts — typed invoke layer (the only module importing @tauri-apps/api) + useVault open/create hooks + shared VaultGate
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor
-  data/                 mock.ts — placeholder data for the not-yet-vault-backed pages (schedule, plans, home) + derivation helpers
+  schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
+  data/                 mock.ts — placeholder data for the not-yet-vault-backed pages (plans, home) + derivation helpers
   pages/                one page per feature (Home, Notes, Plans, Schedule) + pages.ts registry
 src-tauri/              Rust shell
   src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher
   src/config.rs         app config (~/.config/studium/config.toml — remembered vault path)
-  src/commands.rs       Tauri invoke surface (vault_open/create, doc_list/read/write) + vault:changed event
+  src/commands.rs       Tauri invoke surface (vault_open/create, doc_list/read/write, schedule_list) + vault:changed event
   tests/vault_core.rs   integration + property tests for all of the above
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
 docs/                   initialPlan.md (source of truth), ReferenceImage.md
@@ -49,7 +50,7 @@ cargo test                  # Rust tests — run from src-tauri/
 ## Conventions
 
 - Hand-rolled CSS on the token layer only — no UI kit; new colors/spacing become tokens in `tokens.css`, never hardcoded values.
-- The notes page (step 3) reads/writes the real vault via TanStack Query over the `src/vault/ipc.ts` invoke layer; components never call `@tauri-apps/api` directly, and tests mock `ipc.ts` instead of the webview. Schedule/plans/home pages are still static placeholder data from `src/data/mock.ts` until steps 4–6 land.
+- The notes page (step 3) and schedule page (step 4) read the real vault via TanStack Query over the `src/vault/ipc.ts` invoke layer; components never call `@tauri-apps/api` directly, and tests mock `ipc.ts` instead of the webview. Plans/home pages are still static placeholder data from `src/data/mock.ts` until steps 5–6 land.
 - TDD on both sides — tests first, implementation until green:
   - Rust (vault core, Tauri commands): happy paths plus edge cases (malformed frontmatter, dangling links, concurrent hand-edits). Writes must preserve markdown bodies and be atomic.
   - Frontend (components, domain logic): Vitest + React Testing Library (`npm test`); tests live next to the code as `*.test.tsx`, jsdom environment, setup in `src/test/setup.ts`.
@@ -60,6 +61,7 @@ cargo test                  # Rust tests — run from src-tauri/
 
 ### Do
 - After every update, check the docs to see if there is something out of date. If there is, update it.
+- Break long chained expressions into named intermediate variables — one responsibility per line (e.g. bind a `fs::read_to_string` result before `map_err`-ing it, name a boolean before branching on it) instead of stacking calls, combinators, and error mapping into one line.
 
 ### Don't
 - Don't remove a test just because it's not passing (unless changed core logic)

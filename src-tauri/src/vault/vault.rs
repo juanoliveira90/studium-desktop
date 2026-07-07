@@ -71,8 +71,22 @@ impl Vault {
 
     pub fn read(&self, rel_path: &str) -> Result<Document, VaultError> {
         let path = self.resolve(rel_path)?;
-        let raw = fs::read_to_string(&path).map_err(|e| VaultError::io(&path, e))?;
+        let raw = self.read_to_string(&path)?;
         Ok(Document::parse(&raw))
+    }
+
+    /// Reads a multi-entry file (`schedule.md`) as one document per
+    /// frontmatter block. See [`Document::parse_all`].
+    pub fn read_all(&self, rel_path: &str) -> Result<Vec<Document>, VaultError> {
+        let path = self.resolve(rel_path)?;
+        let raw = self.read_to_string(&path)?;
+        Ok(Document::parse_all(&raw))
+    }
+
+    /// Reads a resolved path, wrapping I/O failures with the offending path.
+    fn read_to_string(&self, path: &Path) -> Result<String, VaultError> {
+        let contents = fs::read_to_string(path);
+        contents.map_err(|err| VaultError::io(path, err))
     }
 
     /// Writes atomically, creating parent directories as needed.
