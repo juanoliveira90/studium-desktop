@@ -10,7 +10,13 @@ import {
   type PlanStatus,
   type Subject,
 } from "../plans/plan";
-import { useCreatePlan, usePlans, useToggleSubtask } from "../plans/usePlans";
+import {
+  useAddSubtask,
+  useCreatePlan,
+  useCreateSubject,
+  usePlans,
+  useToggleSubtask,
+} from "../plans/usePlans";
 import { planColorBySlug } from "../schedule/block";
 import { useSchedule } from "../schedule/useSchedule";
 import { useVault } from "../vault/useVault";
@@ -68,6 +74,59 @@ function rangeLabel(plan: Plan): string {
   return "";
 }
 
+/**
+ * The "+ new <thing>" row used at every level (plan, subject, task): a button
+ * that swaps to a text input. Enter hands the trimmed name to onSubmit along
+ * with a close callback (called on mutation success, so the row stays open on
+ * failure); escape cancels without bubbling to page-level escape handlers.
+ */
+function AddRow({
+  label,
+  placeholder,
+  inputLabel,
+  onSubmit,
+}: {
+  label: string;
+  placeholder: string;
+  inputLabel: string;
+  onSubmit: (name: string, close: () => void) => void;
+}) {
+  const [value, setValue] = useState<string | null>(null);
+
+  if (value === null) {
+    return (
+      <button className="add-row" onClick={() => setValue("")}>
+        {label}
+      </button>
+    );
+  }
+
+  const submit = () => {
+    const name = value.trim();
+    if (!name) return;
+    onSubmit(name, () => setValue(null));
+  };
+
+  return (
+    <input
+      className="note-search add-row"
+      type="text"
+      placeholder={placeholder}
+      aria-label={inputLabel}
+      autoFocus
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") submit();
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          setValue(null);
+        }
+      }}
+    />
+  );
+}
+
 /** Status tabs + plan rows with progress; the reference-image half of the page. */
 function PlanList({
   plans,
@@ -81,19 +140,10 @@ function PlanList({
   onOpen: (slug: string) => void;
 }) {
   const [tab, setTab] = useState<PlanStatus>("active");
-  const [addingName, setAddingName] = useState<string | null>(null);
   const createPlan = useCreatePlan();
 
   const today = todayISO();
   const shown = plans.filter((p) => planStatus(p, today) === tab);
-
-  const submitNewPlan = () => {
-    const name = addingName?.trim();
-    if (!name) return;
-    createPlan.mutate(name, {
-      onSuccess: () => setAddingName(null),
-    });
-  };
 
   return (
     <>
@@ -142,28 +192,12 @@ function PlanList({
         })}
       </ul>
       {shown.length === 0 && <p className="muted">no {tab} plans</p>}
-      {addingName === null ? (
-        <button className="add-row" onClick={() => setAddingName("")}>
-          + new plan
-        </button>
-      ) : (
-        <input
-          className="note-search add-row"
-          type="text"
-          placeholder="plan name..."
-          aria-label="new plan name"
-          autoFocus
-          value={addingName}
-          onChange={(e) => setAddingName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submitNewPlan();
-            if (e.key === "Escape") {
-              e.stopPropagation();
-              setAddingName(null);
-            }
-          }}
-        />
-      )}
+      <AddRow
+        label="+ new plan"
+        placeholder="plan name..."
+        inputLabel="new plan name"
+        onSubmit={(name, close) => createPlan.mutate(name, { onSuccess: close })}
+      />
       {errors.length > 0 && (
         <p className="warn">
           ⚠ {errors.length} file{errors.length === 1 ? "" : "s"} under plans/
@@ -190,6 +224,7 @@ function PlanDetail({
   onBack: () => void;
 }) {
   const toggle = useToggleSubtask();
+  const createSubject = useCreateSubject();
 
   // window-level so escape works without any element focused
   useEffect(() => {
@@ -222,6 +257,14 @@ function PlanDetail({
         <SubjectChecklist key={s.path} subject={s} onToggle={toggle.mutate} />
       ))}
       {plan.subjects.length === 0 && <p className="muted">no subjects yet</p>}
+      <AddRow
+        label="+ new subject"
+        placeholder="subject name..."
+        inputLabel="new subject name"
+        onSubmit={(tag, close) =>
+          createSubject.mutate({ planSlug: plan.slug, tag }, { onSuccess: close })
+        }
+      />
     </div>
   );
 }
@@ -233,6 +276,8 @@ function SubjectChecklist({
   subject: Subject;
   onToggle: (args: { subject: Subject; index: number }) => void;
 }) {
+  const addSubtask = useAddSubtask();
+
   return (
     <div className="subject">
       <div className="section-label">
@@ -256,6 +301,18 @@ function SubjectChecklist({
           </li>
         ))}
       </ul>
+      {/* unreadable subjects stay read-only: rewriting their frontmatter
+          would destroy whatever the parser choked on */}
+      {!subject.frontmatterError && (
+        <AddRow
+          label="+ new task"
+          placeholder="task name..."
+          inputLabel={`new task in ${subject.tag}`}
+          onSubmit={(name, close) =>
+            addSubtask.mutate({ subject, name }, { onSuccess: close })
+          }
+        />
+      )}
     </div>
   );
 }

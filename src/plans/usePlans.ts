@@ -10,7 +10,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { docList, docRead, docWrite } from "../vault/ipc";
 import { todayISO } from "../notes/note";
 import {
+  addSubtaskFrontmatter,
   newPlanDoc,
+  newSubjectDoc,
   plansFromDocs,
   toggleSubtaskFrontmatter,
   type Subject,
@@ -40,6 +42,29 @@ export function useCreatePlan() {
       await docWrite(path, frontmatter, body);
       return path;
     },
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
+
+/** Creates plans/<slug>/subjects/<tag>.md with an empty subtask list. */
+export function useCreateSubject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ planSlug, tag }: { planSlug: string; tag: string }) => {
+      const { path, frontmatter, body } = newSubjectDoc(planSlug, tag);
+      await docWrite(path, frontmatter, body);
+      return path;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
+
+/** Appends an undone subtask to its subject file, preserving the body. */
+export function useAddSubtask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subject, name }: { subject: Subject; name: string }) =>
+      docWrite(subject.path, addSubtaskFrontmatter(subject, name), subject.body),
     onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
   });
 }

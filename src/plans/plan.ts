@@ -170,3 +170,24 @@ export function newPlanDoc(name: string, today: string) {
     body: "",
   };
 }
+
+/** Path, frontmatter and body for a fresh subject under a plan. */
+export function newSubjectDoc(planSlug: string, tag: string) {
+  return {
+    path: `plans/${planSlug}/subjects/${slugify(tag)}.md`,
+    frontmatter: { tag, subtasks: [] },
+    body: "",
+  };
+}
+
+/** New frontmatter for a subject with an undone subtask appended. */
+export function addSubtaskFrontmatter(
+  subject: Subject,
+  name: string,
+): Record<string, unknown> {
+  const subtasks = [
+    ...subject.subtasks.map((t) => ({ name: t.name, done: t.done })),
+    { name, done: false },
+  ];
+  return { ...subject.frontmatter, subtasks };
+}
