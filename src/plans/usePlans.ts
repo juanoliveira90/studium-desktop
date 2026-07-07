@@ -1,0 +1,55 @@
+/*
+ * TanStack Query hooks for the plans module. All I/O goes through the invoke
+ * layer (src/vault/ipc.ts): the whole plans/ tree is read with doc_list +
+ * doc_read and assembled by the domain model. Everything lives under the
+ * ["docs", ...] key space so the vault:changed watcher event invalidates it
+ * along with every doc query.
+ */
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { docList, docRead, docWrite } from "../vault/ipc";
+import { todayISO } from "../notes/note";
+import {
+  newPlanDoc,
+  plansFromDocs,
+  toggleSubtaskFrontmatter,
+  type Subject,
+} from "./plan";
+
+export const PLANS_KEY = ["docs", "plans"] as const;
+
+/** Every plan in the vault's plans/ tree, slug order. */
+export function usePlans(enabled: boolean) {
+  return useQuery({
+    queryKey: PLANS_KEY,
+    enabled,
+    queryFn: async () => {
+      const paths = await docList("plans");
+      const docs = await Promise.all(paths.map((p) => docRead(p)));
+      return plansFromDocs(docs);
+    },
+  });
+}
+
+/** Creates plans/<slug>/plan.md starting today; resolves to its path. */
+export function useCreatePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const { path, frontmatter, body } = newPlanDoc(name, todayISO());
+      await docWrite(path, frontmatter, body);
+      return path;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
+
+/** Flips one subtask's done flag in its subject file, preserving the body. */
+export function useToggleSubtask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subject, index }: { subject: Subject; index: number }) =>
+      docWrite(subject.path, toggleSubtaskFrontmatter(subject, index), subject.body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}

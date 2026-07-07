@@ -1,9 +1,9 @@
 /*
- * Static placeholder data until the frontend talks to the vault (roadmap
- * steps 5–6; notes and the schedule already read the vault, see src/notes/
- * and src/schedule/). Mirrors sample-vault/ exactly — same shapes the Rust
- * core parses from markdown frontmatter — so swapping in real data is a data
- * source change, not a model change.
+ * Static placeholder data for the home page, the last mock-backed page
+ * (roadmap step 6; notes, the schedule and plans already read the vault, see
+ * src/notes/, src/schedule/ and src/plans/). Mirrors sample-vault/ exactly —
+ * same shapes the Rust core parses from markdown frontmatter — so swapping
+ * in real data is a data source change, not a model change.
  */
 
 import {

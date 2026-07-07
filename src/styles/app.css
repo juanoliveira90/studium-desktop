@@ -412,6 +412,12 @@
   display: flex;
   align-items: baseline;
   gap: var(--sp-2);
+  padding: 0;
+  text-align: left;
+}
+
+button.plan-head:hover .name {
+  color: var(--accent);
 }
 
 .plan-head .dot {
@@ -449,6 +455,34 @@
   color: var(--fg-dim);
   min-width: 4ch;
   text-align: right;
+}
+
+.plan-detail .plan-head .hint {
+  margin-left: auto;
+  color: var(--fg-dim);
+}
+
+.plan-detail .subject {
+  margin-top: var(--sp-4);
+}
+
+.subtask-list {
+  list-style: none;
+}
+
+.subtask {
+  display: block;
+  width: 100%;
+  padding: var(--sp-1) 0;
+  text-align: left;
+}
+
+.subtask:hover {
+  color: var(--fg-bright);
+}
+
+.subtask.is-done {
+  color: var(--fg-dim);
 }
 
 /* ── schedule page ─────────────────────────────────────── */
