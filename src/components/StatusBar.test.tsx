@@ -10,7 +10,7 @@ describe("StatusBar", () => {
 
     expect(screen.getAllByRole("button")).toHaveLength(4);
     expect(screen.getByRole("button", { name: /alt\+1 home/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /alt\+4 week/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /alt\+4 weekly routine/ })).toBeInTheDocument();
   });
 
   it("marks the active page as current", () => {

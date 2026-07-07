@@ -17,5 +17,5 @@ export const PAGES: PageDef[] = [
   { id: "home", title: "home", combo: "alt+1", Component: HomePage },
   { id: "notes", title: "notes", combo: "alt+2", Component: NotesPage },
   { id: "plans", title: "study plan", combo: "alt+3", Component: PlansPage },
-  { id: "schedule", title: "week", combo: "alt+4", Component: SchedulePage },
+  { id: "schedule", title: "weekly routine", combo: "alt+4", Component: SchedulePage },
 ];
