@@ -70,6 +70,7 @@ cargo test                  # Rust tests — run from src-tauri/
       .unwrap_or(std::time::Duration::ZERO);
   ```
 
+- Run regression tests after every code update. A new feature, refactor, or any update should not break any other test.
 ### Don't
 - Don't remove a test just because it's not passing (unless changed core logic)
 - Don't make a commit if something is broken; each commit should be "production-ready"
