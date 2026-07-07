@@ -118,15 +118,6 @@ function HomeToday({ blocks, plans }: { blocks: ScheduleBlock[]; plans: Plan[] }
             </div>
           )}
         </div>
-        <blockquote className="quote">
-          “The beautiful thing about learning is that no one can take it away
-          from you.”
-          <span className="who">— B.B. King</span>
-        </blockquote>
-      </div>
-
-      <div className="prompt-line">
-        ~ /studium <span className="cursor">&nbsp;</span>
       </div>
     </>
   );

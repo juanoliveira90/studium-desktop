@@ -233,39 +233,6 @@
   color: var(--accent);
 }
 
-.quote {
-  flex: 1;
-  border-left: 1px solid var(--border);
-  padding-left: var(--sp-4);
-  color: var(--fg-dim);
-  font-size: var(--fs);
-}
-
-.quote .who {
-  display: block;
-  margin-top: var(--sp-2);
-  color: var(--fg-faint);
-}
-
-.prompt-line {
-  margin-top: auto;
-  padding-top: var(--sp-4);
-  color: var(--fg-dim);
-}
-
-.prompt-line .cursor {
-  display: inline-block;
-  width: 7px;
-  background: var(--fg-dim);
-  animation: blink 1.2s steps(1) infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
 /* ── notes page ────────────────────────────────────────── */
 
 .note-search {
@@ -486,32 +453,6 @@ button.plan-head:hover .name {
 }
 
 /* ── schedule page ─────────────────────────────────────── */
-
-.week-header {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-}
-
-.week-header .nav {
-  color: var(--fg-dim);
-  padding: 0 var(--sp-1);
-}
-
-.week-header .nav:hover,
-.week-header .today-btn:hover {
-  color: var(--fg-bright);
-}
-
-.week-header .range {
-  flex: 1;
-  text-align: center;
-  color: var(--fg-bright);
-}
-
-.week-header .today-btn {
-  color: var(--fg-dim);
-}
 
 .week-grid {
   flex: 1;

@@ -15,15 +15,6 @@ const END_HOUR = 22;
 const HOURS = END_HOUR - START_HOUR;
 const ROWS = HOURS * 2; // half-hour resolution, schedule times are "HH:MM"
 
-function WeekHeader() {
-  return (
-    <div className="week-header">
-      <h2>week</h2>
-      <span className="range">weekly routine</span>
-    </div>
-  );
-}
-
 export function SchedulePage() {
   const vault = useVault();
   const schedule = useSchedule(Boolean(vault.data));
@@ -42,7 +33,7 @@ export function SchedulePage() {
   }
 
   return (
-    <Page title="week" hint="alt+4" header={<WeekHeader />}>
+    <Page title="weekly routine" hint="alt+4">
       {body}
     </Page>
   );

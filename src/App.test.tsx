@@ -27,7 +27,7 @@ describe("App", () => {
     render(<App />);
 
     await user.keyboard("{Alt>}4{/Alt}");
-    expect(screen.getByRole("region", { name: "week" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "weekly routine" })).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "home" })).not.toBeInTheDocument();
 
     await user.keyboard("{Alt>}1{/Alt}");
