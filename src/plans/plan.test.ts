@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { DocPayload } from "../vault/ipc";
 import {
+  addSubtaskFrontmatter,
   newPlanDoc,
+  newSubjectDoc,
   planProgress,
   planStatus,
   plansFromDocs,
@@ -267,6 +269,61 @@ describe("newPlanDoc", () => {
       path: "plans/real-analysis-i/plan.md",
       frontmatter: { name: "Real Analysis I", start: "2026-07-07" },
       body: "",
+    });
+  });
+});
+
+describe("newSubjectDoc", () => {
+  it("builds plans/<slug>/subjects/<tag>.md with an empty subtask list", () => {
+    expect(newSubjectDoc("calculus-ii", "Improper Integrals")).toEqual({
+      path: "plans/calculus-ii/subjects/improper-integrals.md",
+      frontmatter: { tag: "Improper Integrals", subtasks: [] },
+      body: "",
+    });
+  });
+});
+
+describe("addSubtaskFrontmatter", () => {
+  it("appends an undone subtask, preserving the rest of the frontmatter", () => {
+    const subject: Subject = {
+      path: "plans/p/subjects/s.md",
+      tag: "s",
+      subtasks: [{ name: "a", done: true }],
+      body: "notes\n",
+      frontmatter: {
+        tag: "s",
+        subtasks: [{ name: "a", done: true }],
+        extra: "kept",
+      },
+    };
+
+    const next = addSubtaskFrontmatter(subject, "b");
+
+    expect(next).toEqual({
+      tag: "s",
+      subtasks: [
+        { name: "a", done: true },
+        { name: "b", done: false },
+      ],
+      extra: "kept",
+    });
+    // the input is not mutated
+    expect(subject.subtasks).toEqual([{ name: "a", done: true }]);
+    expect(subject.frontmatter["subtasks"]).toEqual([{ name: "a", done: true }]);
+  });
+
+  it("starts the list for a subject with no subtasks yet", () => {
+    const subject: Subject = {
+      path: "plans/p/subjects/s.md",
+      tag: "s",
+      subtasks: [],
+      body: "",
+      frontmatter: { tag: "s" },
+    };
+
+    expect(addSubtaskFrontmatter(subject, "first")).toEqual({
+      tag: "s",
+      subtasks: [{ name: "first", done: false }],
     });
   });
 });

@@ -197,6 +197,73 @@ describe("PlansPage", () => {
     );
   });
 
+  it("creates plans/<slug>/subjects/<tag>.md when a new subject is named", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Calculus II"));
+    await user.click(screen.getByRole("button", { name: "+ new subject" }));
+    await user.type(screen.getByLabelText("new subject name"), "Improper Integrals{Enter}");
+
+    expect(ipc.docWrite).toHaveBeenCalledWith(
+      "plans/calculus-ii/subjects/improper-integrals.md",
+      { tag: "Improper Integrals", subtasks: [] },
+      "",
+    );
+  });
+
+  it("keeps the plan detail open when escape cancels the new-subject input", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Calculus II"));
+    await user.click(screen.getByRole("button", { name: "+ new subject" }));
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByLabelText("new subject name")).not.toBeInTheDocument();
+    expect(screen.getByText("integrals")).toBeInTheDocument();
+  });
+
+  it("appends a new task to its subject file when named", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Linear Algebra"));
+    await user.click(screen.getByRole("button", { name: "+ new task" }));
+    await user.type(screen.getByLabelText("new task in matrices"), "eigenvalues{Enter}");
+
+    expect(ipc.docWrite).toHaveBeenCalledWith(
+      "plans/linear-algebra/subjects/matrices.md",
+      {
+        tag: "matrices",
+        subtasks: [
+          { name: "gaussian elimination practice", done: true },
+          { name: "matrix factorizations (LU)", done: false },
+          { name: "eigenvalues", done: false },
+        ],
+      },
+      "",
+    );
+  });
+
+  it("offers no task creation on subjects with broken frontmatter", async () => {
+    mockDocs([
+      ...SAMPLE_DOCS,
+      {
+        path: "plans/linear-algebra/subjects/broken.md",
+        frontmatter: {},
+        frontmatter_error: "bad YAML on line 1",
+        body: "",
+      },
+    ]);
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Linear Algebra"));
+    // one editable subject (matrices) → exactly one add-task row
+    expect(screen.getAllByRole("button", { name: "+ new task" })).toHaveLength(1);
+  });
+
   it("returns from the plan detail to the list on escape", async () => {
     const user = userEvent.setup();
     renderPage();
