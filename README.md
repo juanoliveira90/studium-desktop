@@ -59,5 +59,5 @@ src/               React frontend
   pages/             one page per feature (home, notes, plans, schedule)
 src-tauri/         Rust shell: vault core (frontmatter, atomic writes, watcher) + Tauri commands
 sample-vault/      example vault in the final format — doubles as Rust test data
-docs/              plan + design reference
+docs/              plan + design reference + adr/ decision records
 ```

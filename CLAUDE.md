@@ -26,7 +26,7 @@ src-tauri/              Rust shell
   src/commands.rs       Tauri invoke surface (vault_open/create, doc_list/read/write, schedule_list) + vault:changed event
   tests/vault_core.rs   integration + property tests for all of the above
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
-docs/                   initialPlan.md (source of truth), ReferenceImage.md
+docs/                   initialPlan.md (source of truth), ReferenceImage.md, adr/ (architecture decision records)
 ```
 
 ## Commands
