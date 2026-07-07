@@ -10,6 +10,7 @@ beforeEach(() => {
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.docList).mockResolvedValue([]);
+  vi.mocked(ipc.scheduleList).mockResolvedValue([]);
   vi.mocked(ipc.onVaultChanged).mockReturnValue(() => {});
 });
 

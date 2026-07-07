@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Page } from "../components/Page";
-import { formatDateRange, formatShortDate } from "../data/mock";
+import { formatDateRange, formatShortDate } from "../data/format";
 import { todayISO } from "../notes/note";
 import {
   PLAN_TABS,

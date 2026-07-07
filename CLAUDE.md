@@ -19,7 +19,8 @@ src/                    React frontend
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor
   schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
   plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, status, progress) + usePlans query/mutation hooks
-  data/                 mock.ts — placeholder data for the not-yet-vault-backed home page + derivation helpers
+  home/                 home module: today.ts — pure aggregation over schedule + plans data (today checklist, up next, clock helpers)
+  data/                 format.ts — shared date display formatting for the vault's ISO dates
   pages/                one page per feature (Home, Notes, Plans, Schedule) + pages.ts registry
 src-tauri/              Rust shell
   src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher
@@ -51,7 +52,7 @@ cargo test                  # Rust tests — run from src-tauri/
 ## Conventions
 
 - Hand-rolled CSS on the token layer only — no UI kit; new colors/spacing become tokens in `tokens.css`, never hardcoded values.
-- The notes page (step 3), schedule page (step 4) and plans page (step 5) read the real vault via TanStack Query over the `src/vault/ipc.ts` invoke layer; components never call `@tauri-apps/api` directly, and tests mock `ipc.ts` instead of the webview. The home page is still static placeholder data from `src/data/mock.ts` until step 6 lands.
+- Every page (notes, schedule, plans, home — steps 3–6) reads the real vault via TanStack Query over the `src/vault/ipc.ts` invoke layer; components never call `@tauri-apps/api` directly, and tests mock `ipc.ts` instead of the webview.
 - TDD on both sides — tests first, implementation until green:
   - Rust (vault core, Tauri commands): happy paths plus edge cases (malformed frontmatter, dangling links, concurrent hand-edits). Writes must preserve markdown bodies and be atomic.
   - Frontend (components, domain logic): Vitest + React Testing Library (`npm test`); tests live next to the code as `*.test.tsx`, jsdom environment, setup in `src/test/setup.ts`.
