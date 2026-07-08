@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import type { EditorView } from "codemirror";
+import { indentWithTab } from "@codemirror/commands";
 import { Editor } from "./Editor";
 
 function renderEditor(value: string, onChange = vi.fn()) {
@@ -23,5 +24,15 @@ describe("Editor", () => {
     view.dispatch({ changes: { from: 5, insert: " typed" } });
 
     expect(onChange).toHaveBeenCalledWith("start typed");
+  });
+
+  it("inserts spaces when Tab is pressed instead of moving focus", () => {
+    const { view } = renderEditor("note");
+    const tabBinding = indentWithTab;
+
+    const handled = tabBinding.run!(view);
+
+    expect(handled).toBe(true);
+    expect(view.state.doc.toString()).toBe("    note");
   });
 });

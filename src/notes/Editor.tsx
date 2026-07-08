@@ -8,6 +8,9 @@
 
 import { useEffect, useRef } from "react";
 import { EditorView, minimalSetup } from "codemirror";
+import { keymap } from "@codemirror/view";
+import { indentUnit } from "@codemirror/language";
+import { indentWithTab } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 
 interface EditorProps {
@@ -35,6 +38,10 @@ export function Editor({ value, onChange, onReady }: EditorProps) {
       extensions: [
         minimalSetup,
         markdown(),
+        // Tab indents inside the editor (4 spaces) rather than moving focus
+        // between page/footer elements; Shift+Tab dedents.
+        indentUnit.of("    "),
+        keymap.of([indentWithTab]),
         EditorView.lineWrapping,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) onChangeRef.current(update.state.doc.toString());
