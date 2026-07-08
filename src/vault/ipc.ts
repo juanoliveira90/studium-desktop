@@ -73,6 +73,14 @@ export function docWrite(
   return invoke("doc_write", { path, frontmatter, body });
 }
 
+/**
+ * Deletes a file or directory (recursively) at a vault-relative path — a
+ * note or subject file, or a whole `plans/<slug>` directory.
+ */
+export function docDelete(path: string): Promise<void> {
+  return invoke("doc_delete", { path });
+}
+
 /** Mirror of the Rust `ScheduleEntry`: one frontmatter block of schedule.md. */
 export interface ScheduleEntry {
   frontmatter: Record<string, unknown>;

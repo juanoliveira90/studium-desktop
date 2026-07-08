@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Page } from "../components/Page";
+import { useContextMenu } from "../components/useContextMenu";
 import { formatShortDate } from "../data/format";
 import { Editor } from "../notes/Editor";
 import { filterNotes, noteTags, type Note } from "../notes/note";
-import { useCreateNote, useNotes, useSaveNote } from "../notes/useNotes";
+import { useCreateNote, useDeleteNote, useNotes, useSaveNote } from "../notes/useNotes";
 import { useVault } from "../vault/useVault";
 import { VaultGate } from "../vault/VaultGate";
 
@@ -56,6 +57,8 @@ function NoteList({
   const [highlight, setHighlight] = useState(0);
   const [addingTitle, setAddingTitle] = useState<string | null>(null);
   const createNote = useCreateNote();
+  const deleteNote = useDeleteNote();
+  const { menu, open: openMenu } = useContextMenu();
 
   const tags = ["all", ...noteTags(notes)];
   const filtered = filterNotes(notes, tag, query);
@@ -120,7 +123,19 @@ function NoteList({
       <ul className="note-list">
         {filtered.map((n, i) => (
           <li key={n.path} className={i === highlighted ? "is-highlighted" : ""}>
-            <button className="note-row" onClick={() => onOpen(n.path)}>
+            <button
+              className="note-row"
+              onClick={() => onOpen(n.path)}
+              onContextMenu={(e) =>
+                openMenu(e, [
+                  {
+                    label: "delete note",
+                    confirmLabel: "really delete?",
+                    onSelect: () => deleteNote.mutate(n.path),
+                  },
+                ])
+              }
+            >
               <span className="icon">🗎</span>
               <span>{n.title}</span>
               {n.frontmatterError && (
@@ -155,6 +170,7 @@ function NoteList({
           }}
         />
       )}
+      {menu}
     </>
   );
 }

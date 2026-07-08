@@ -7,6 +7,7 @@ import {
   planProgress,
   planStatus,
   plansFromDocs,
+  removeSubtaskFrontmatter,
   toggleSubtaskFrontmatter,
   type Plan,
   type Subject,
@@ -260,6 +261,44 @@ describe("toggleSubtaskFrontmatter", () => {
       { name: "a", done: true },
       { name: "b", done: false },
     ]);
+  });
+});
+
+describe("removeSubtaskFrontmatter", () => {
+  it("drops one subtask, preserving the rest of the frontmatter", () => {
+    const subject: Subject = {
+      path: "plans/p/subjects/s.md",
+      tag: "s",
+      subtasks: [
+        { name: "a", done: true },
+        { name: "b", done: false },
+        { name: "c", done: false },
+      ],
+      body: "notes\n",
+      frontmatter: {
+        tag: "s",
+        subtasks: [
+          { name: "a", done: true },
+          { name: "b", done: false },
+          { name: "c", done: false },
+        ],
+        extra: "kept",
+      },
+    };
+
+    const next = removeSubtaskFrontmatter(subject, 1);
+
+    expect(next).toEqual({
+      tag: "s",
+      subtasks: [
+        { name: "a", done: true },
+        { name: "c", done: false },
+      ],
+      extra: "kept",
+    });
+    // the input is not mutated
+    expect(subject.subtasks).toHaveLength(3);
+    expect(subject.frontmatter["subtasks"]).toHaveLength(3);
   });
 });
 

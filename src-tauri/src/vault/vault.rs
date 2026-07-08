@@ -102,6 +102,24 @@ impl Vault {
         atomic_write(&path, &doc.to_string())
     }
 
+    /// Removes a file or directory (recursively) at `rel_path`. Rejects
+    /// paths that escape the root, like every other vault operation, and
+    /// refuses an empty path so the vault root itself can never be removed.
+    pub fn remove(&self, rel_path: &str) -> Result<(), VaultError> {
+        if rel_path.trim().is_empty() {
+            return Err(VaultError::InvalidPath {
+                path: rel_path.to_string(),
+            });
+        }
+        let path = self.resolve(rel_path)?;
+        let removal = if path.is_dir() {
+            fs::remove_dir_all(&path)
+        } else {
+            fs::remove_file(&path)
+        };
+        removal.map_err(|e| VaultError::io(&path, e))
+    }
+
     fn resolve(&self, rel: &str) -> Result<PathBuf, VaultError> {
         let rel_path = Path::new(rel);
         let escapes = rel_path
