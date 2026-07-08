@@ -29,10 +29,6 @@
   color: var(--fg-dim);
 }
 
-.status-bar-item .key {
-  color: var(--fg-faint);
-}
-
 .status-bar-item:hover {
   color: var(--fg);
 }
@@ -40,14 +36,6 @@
 .status-bar-item.is-active {
   background: var(--bg-raised);
   color: var(--fg-bright);
-}
-
-.status-bar-item.is-active .key {
-  color: var(--accent);
-}
-
-.status-bar-spacer {
-  flex: 1;
 }
 
 /* ── modal ─────────────────────────────────────────────── */
@@ -178,9 +166,13 @@
   padding-bottom: 2px;
 }
 
-.page-title .hint {
-  color: var(--fg-faint);
+.page-settings {
+  color: var(--fg-dim);
   font-size: var(--fs-sm);
+}
+
+.page-settings:hover {
+  color: var(--fg-bright);
 }
 
 .page-body {

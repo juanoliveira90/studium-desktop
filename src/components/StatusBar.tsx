@@ -4,10 +4,9 @@ interface StatusBarProps {
   pages: PageDef[];
   activeId: PageId;
   onSelect: (id: PageId) => void;
-  onSettings: () => void;
 }
 
-export function StatusBar({ pages, activeId, onSelect, onSettings }: StatusBarProps) {
+export function StatusBar({ pages, activeId, onSelect }: StatusBarProps) {
   return (
     <nav className="status-bar" aria-label="pages">
       {pages.map((p) => (
@@ -17,17 +16,9 @@ export function StatusBar({ pages, activeId, onSelect, onSettings }: StatusBarPr
           aria-current={p.id === activeId ? "page" : undefined}
           onClick={() => onSelect(p.id)}
         >
-          <span className="key">{p.combo}</span> {p.title}
+          {p.title}
         </button>
       ))}
-      <span className="status-bar-spacer" />
-      <button
-        className="status-bar-item status-bar-settings"
-        aria-label="vault settings"
-        onClick={onSettings}
-      >
-        ⚙ vault
-      </button>
     </nav>
   );
 }

@@ -60,7 +60,7 @@ export function PlansPage() {
   }
 
   return (
-    <Page title="study plan" hint="alt+3">
+    <Page title="study plan">
       {body}
     </Page>
   );

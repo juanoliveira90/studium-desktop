@@ -37,7 +37,7 @@ export function NotesPage() {
   }
 
   return (
-    <Page title="notes" hint="alt+2">
+    <Page title="notes">
       {body}
     </Page>
   );

@@ -39,11 +39,11 @@ describe("App", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: /alt\+2 notes/ }));
+    await user.click(screen.getByRole("button", { name: "notes" }));
 
     expect(screen.getByRole("region", { name: "notes" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /alt\+2 notes/ }),
+      screen.getByRole("button", { name: "notes" }),
     ).toHaveAttribute("aria-current", "page");
   });
 

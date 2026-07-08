@@ -6,24 +6,17 @@ import { PAGES } from "../pages/pages";
 
 function renderBar(overrides: Partial<Parameters<typeof StatusBar>[0]> = {}) {
   return render(
-    <StatusBar
-      pages={PAGES}
-      activeId="home"
-      onSelect={() => {}}
-      onSettings={() => {}}
-      {...overrides}
-    />,
+    <StatusBar pages={PAGES} activeId="home" onSelect={() => {}} {...overrides} />,
   );
 }
 
 describe("StatusBar", () => {
-  it("renders a button per page with its title and keybinding", () => {
+  it("renders a button per page with its title", () => {
     renderBar();
 
-    // 4 pages + the settings button
-    expect(screen.getAllByRole("button")).toHaveLength(5);
-    expect(screen.getByRole("button", { name: /alt\+1 home/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /alt\+4 weekly routine/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("button")).toHaveLength(4);
+    expect(screen.getByRole("button", { name: "home" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "weekly routine" })).toBeInTheDocument();
   });
 
   it("marks the active page as current", () => {
@@ -44,15 +37,5 @@ describe("StatusBar", () => {
     await user.click(screen.getByRole("button", { name: /notes/ }));
 
     expect(onSelect).toHaveBeenCalledWith("notes");
-  });
-
-  it("fires onSettings from the vault settings button", async () => {
-    const user = userEvent.setup();
-    const onSettings = vi.fn();
-    renderBar({ onSettings });
-
-    await user.click(screen.getByRole("button", { name: "vault settings" }));
-
-    expect(onSettings).toHaveBeenCalled();
   });
 });

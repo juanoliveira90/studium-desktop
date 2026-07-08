@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useKeymap } from "./keyboard/useKeymap";
 import { StatusBar } from "./components/StatusBar";
+import { SettingsContext } from "./components/settingsContext";
 import { PAGES, type PageId } from "./pages/pages";
 import { onVaultChanged } from "./vault/ipc";
 import { VaultSettingsModal } from "./vault/VaultSettingsModal";
@@ -41,18 +42,15 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="app">
-        <main className="page-container">
-          <Component />
-        </main>
-        <StatusBar
-          pages={PAGES}
-          activeId={active}
-          onSelect={setActive}
-          onSettings={() => setSettingsOpen(true)}
-        />
-      </div>
-      {settingsOpen && <VaultSettingsModal onClose={() => setSettingsOpen(false)} />}
+      <SettingsContext.Provider value={() => setSettingsOpen(true)}>
+        <div className="app">
+          <main className="page-container">
+            <Component />
+          </main>
+          <StatusBar pages={PAGES} activeId={active} onSelect={setActive} />
+        </div>
+        {settingsOpen && <VaultSettingsModal onClose={() => setSettingsOpen(false)} />}
+      </SettingsContext.Provider>
     </QueryClientProvider>
   );
 }

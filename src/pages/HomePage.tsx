@@ -34,7 +34,7 @@ export function HomePage() {
   }
 
   return (
-    <Page title="home" hint="alt+1">
+    <Page title="home">
       <div className="home-hero">
         <span className="logo">▣</span>
         <div>

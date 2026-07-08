@@ -33,7 +33,7 @@ export function SchedulePage() {
   }
 
   return (
-    <Page title="weekly routine" hint="alt+4">
+    <Page title="weekly routine">
       {body}
     </Page>
   );
