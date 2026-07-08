@@ -1,30 +1,21 @@
-import { useState } from "react";
+import { pickFolder } from "./ipc";
 import { useOpenVault } from "./useVault";
 
-/** Shown when no vault is remembered (or opening it failed): pick one by path. */
+/** Shown when no vault is remembered (or opening it failed): pick one. */
 export function VaultGate({ loadError }: { loadError: Error | null }) {
-  const [path, setPath] = useState("");
   const openVault = useOpenVault();
 
-  const submit = (create: boolean) => {
-    if (path.trim()) openVault.mutate({ path: path.trim(), create });
+  const pick = async (create: boolean) => {
+    const path = await pickFolder();
+    if (path) openVault.mutate({ path, create });
   };
 
   return (
     <div className="vault-gate">
-      <p className="muted">no vault open — enter a directory to use as your vault</p>
-      <input
-        className="note-search"
-        type="text"
-        placeholder="/path/to/vault"
-        aria-label="vault path"
-        value={path}
-        onChange={(e) => setPath(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && submit(false)}
-      />
+      <p className="muted">no vault open — choose a directory to use as your vault</p>
       <div className="vault-gate-actions">
-        <button onClick={() => submit(false)}>open</button>
-        <button onClick={() => submit(true)}>create</button>
+        <button onClick={() => pick(false)}>open vault…</button>
+        <button onClick={() => pick(true)}>create vault…</button>
       </div>
       {loadError && <p className="error">{String(loadError)}</p>}
       {openVault.isError && <p className="error">{String(openVault.error)}</p>}

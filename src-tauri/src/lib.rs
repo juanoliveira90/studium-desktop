@@ -6,11 +6,15 @@ pub mod vault;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(commands::VaultState::default())
         .invoke_handler(tauri::generate_handler![
             commands::vault_default_path,
             commands::vault_create,
             commands::vault_open,
+            commands::vault_list_known,
+            commands::vault_forget,
+            commands::vault_delete,
             commands::doc_list,
             commands::doc_read,
             commands::doc_write,

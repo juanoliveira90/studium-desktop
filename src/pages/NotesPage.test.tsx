@@ -223,9 +223,8 @@ describe("NotesPage", () => {
     vi.mocked(ipc.vaultDefaultPath).mockResolvedValue(null);
     renderPage();
 
-    const pathInput = await screen.findByRole("textbox", { name: "vault path" });
-    await user.type(pathInput, "/home/juan/vault");
-    await user.click(screen.getByRole("button", { name: "open" }));
+    vi.mocked(ipc.pickFolder).mockResolvedValue("/home/juan/vault");
+    await user.click(await screen.findByRole("button", { name: /open vault/ }));
 
     expect(await screen.findAllByRole("listitem")).toHaveLength(4);
     expect(ipc.vaultOpen).toHaveBeenCalledWith("/home/juan/vault");

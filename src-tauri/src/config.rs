@@ -15,6 +15,10 @@ const CONFIG_FILE: &str = "config.toml";
 pub struct AppConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vault_path: Option<PathBuf>,
+    /// Every vault the user has opened; `default` keeps old config files
+    /// (which only had `vault_path`) loading unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub vaults: Vec<PathBuf>,
 }
 
 impl AppConfig {
@@ -36,6 +40,38 @@ impl AppConfig {
         toml::from_str(&raw).map_err(|e| VaultError::Config {
             message: format!("{}: {e}", path.display()),
         })
+    }
+
+    /// The vault list plus a legacy `vault_path` not yet in it — the
+    /// read-time migration for configs written before the list existed.
+    /// Order-stable and deduped.
+    pub fn known_vaults(&self) -> Vec<PathBuf> {
+        let mut all = self.vaults.clone();
+        if let Some(current) = &self.vault_path {
+            let already_listed = all.contains(current);
+            if !already_listed {
+                all.push(current.clone());
+            }
+        }
+        all
+    }
+
+    /// Makes `path` the current vault and adds it to the list if absent.
+    pub fn remember_vault(&mut self, path: &Path) {
+        let already_listed = self.vaults.iter().any(|v| v == path);
+        if !already_listed {
+            self.vaults.push(path.to_path_buf());
+        }
+        self.vault_path = Some(path.to_path_buf());
+    }
+
+    /// Removes `path` from the list; clears the current vault if it matches.
+    pub fn forget_vault(&mut self, path: &Path) {
+        self.vaults.retain(|v| v != path);
+        let was_current = self.vault_path.as_deref() == Some(path);
+        if was_current {
+            self.vault_path = None;
+        }
     }
 
     pub fn save_to(&self, dir: &Path) -> Result<(), VaultError> {

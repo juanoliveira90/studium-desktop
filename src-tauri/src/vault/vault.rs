@@ -52,6 +52,14 @@ impl Vault {
         Ok(Vault { root })
     }
 
+    /// Deletes the vault directory from disk. Routes through [`Vault::open`],
+    /// so anything without the `.studium/` marker is refused — a typo can
+    /// never remove an arbitrary directory.
+    pub fn delete(path: impl AsRef<Path>) -> Result<(), VaultError> {
+        let vault = Vault::open(path)?;
+        fs::remove_dir_all(vault.root()).map_err(|e| VaultError::io(vault.root(), e))
+    }
+
     pub fn root(&self) -> &Path {
         &self.root
     }

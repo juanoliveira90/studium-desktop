@@ -3,7 +3,7 @@
 //! the open-vault state, translate errors to strings, and forward watcher
 //! events to the webview as `vault:changed`.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use serde::Serialize;
@@ -79,6 +79,60 @@ pub fn vault_open(
     path: PathBuf,
 ) -> Result<VaultInfo, String> {
     install_vault(&app, &state, &path)
+}
+
+/// Every vault the user has opened, per the app config.
+#[tauri::command]
+pub fn vault_list_known() -> Vec<PathBuf> {
+    let Some(dir) = AppConfig::default_dir() else {
+        return Vec::new();
+    };
+    let cfg = AppConfig::load_from(&dir).unwrap_or_default();
+    cfg.known_vaults()
+}
+
+/// Removes a vault from the known list; its files stay on disk. Closes it
+/// first when it is the open vault. Returns the updated list.
+#[tauri::command]
+pub fn vault_forget(state: State<'_, VaultState>, path: PathBuf) -> Result<Vec<PathBuf>, String> {
+    close_if_current(&state, &path)?;
+    forget_in_config(&path)
+}
+
+/// Deletes a vault's directory from disk (marker-validated in the vault
+/// core) and forgets it. Returns the updated list.
+#[tauri::command]
+pub fn vault_delete(state: State<'_, VaultState>, path: PathBuf) -> Result<Vec<PathBuf>, String> {
+    // Close first so the watcher releases its handle on the tree before
+    // remove_dir_all runs.
+    close_if_current(&state, &path)?;
+    Vault::delete(&path).map_err(|e| e.to_string())?;
+    forget_in_config(&path)
+}
+
+/// Drops the open vault (and its watcher) when `path` refers to it.
+fn close_if_current(state: &State<'_, VaultState>, path: &Path) -> Result<(), String> {
+    let requested_root = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    let mut guard = state.0.lock().map_err(|e| e.to_string())?;
+    let is_current = guard
+        .as_ref()
+        .is_some_and(|open| open.vault.root() == requested_root);
+    if is_current {
+        *guard = None;
+    }
+    Ok(())
+}
+
+/// Removes `path` from the app config's vault list and returns what remains.
+fn forget_in_config(path: &Path) -> Result<Vec<PathBuf>, String> {
+    let dir = AppConfig::default_dir().ok_or("no config directory")?;
+    let mut cfg = AppConfig::load_from(&dir).unwrap_or_default();
+    // Config files store the canonicalized root, so forget that form too.
+    let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    cfg.forget_vault(path);
+    cfg.forget_vault(&canonical);
+    cfg.save_to(&dir).map_err(|e| e.to_string())?;
+    Ok(cfg.known_vaults())
 }
 
 #[tauri::command]
@@ -190,7 +244,7 @@ fn install_vault(
 
     if let Some(dir) = AppConfig::default_dir() {
         let mut cfg = AppConfig::load_from(&dir).unwrap_or_default();
-        cfg.vault_path = Some(root.clone());
+        cfg.remember_vault(&root);
         // Remembering the vault is best-effort; failing to write config
         // must not block opening it.
         let _ = cfg.save_to(&dir);

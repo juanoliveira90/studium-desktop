@@ -306,7 +306,7 @@ describe("PlansPage", () => {
     vi.mocked(ipc.vaultDefaultPath).mockResolvedValue(null);
     renderPage();
 
-    expect(await screen.findByLabelText("vault path")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /open vault/ })).toBeInTheDocument();
     expect(ipc.docList).not.toHaveBeenCalled();
   });
 });

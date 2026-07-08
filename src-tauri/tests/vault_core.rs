@@ -2,7 +2,7 @@
 //! writes, vault open/create, doc listing/read/write, app config, watcher.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use studium_desktop_lib::config::AppConfig;
@@ -445,10 +445,121 @@ fn app_config_save_load_round_trip() {
     let dir = tempfile::tempdir().unwrap();
     let cfg = AppConfig {
         vault_path: Some("/home/juan/vault".into()),
+        ..Default::default()
     };
     cfg.save_to(dir.path()).unwrap();
     let loaded = AppConfig::load_from(dir.path()).unwrap();
     assert_eq!(loaded.vault_path.as_deref(), Some(Path::new("/home/juan/vault")));
+}
+
+// -------------------------------------------------- config: known vaults
+
+#[test]
+fn config_old_file_without_vaults_still_loads() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(
+        dir.path().join("config.toml"),
+        "vault_path = \"/home/juan/vault\"\n",
+    )
+    .unwrap();
+    let cfg = AppConfig::load_from(dir.path()).unwrap();
+    assert_eq!(cfg.vault_path.as_deref(), Some(Path::new("/home/juan/vault")));
+    // The legacy single path counts as a known vault without rewriting the file.
+    assert_eq!(cfg.known_vaults(), vec![PathBuf::from("/home/juan/vault")]);
+}
+
+#[test]
+fn config_remember_vault_sets_current_and_dedupes() {
+    let mut cfg = AppConfig::default();
+    cfg.remember_vault(Path::new("/a"));
+    cfg.remember_vault(Path::new("/b"));
+    cfg.remember_vault(Path::new("/a"));
+    assert_eq!(cfg.vault_path.as_deref(), Some(Path::new("/a")));
+    assert_eq!(
+        cfg.known_vaults(),
+        vec![PathBuf::from("/a"), PathBuf::from("/b")]
+    );
+}
+
+#[test]
+fn config_known_vaults_merges_legacy_current_without_duplicating() {
+    let cfg = AppConfig {
+        vault_path: Some("/b".into()),
+        vaults: vec!["/a".into(), "/b".into()],
+    };
+    assert_eq!(
+        cfg.known_vaults(),
+        vec![PathBuf::from("/a"), PathBuf::from("/b")]
+    );
+
+    let legacy_only = AppConfig {
+        vault_path: Some("/c".into()),
+        vaults: vec!["/a".into()],
+    };
+    assert_eq!(
+        legacy_only.known_vaults(),
+        vec![PathBuf::from("/a"), PathBuf::from("/c")]
+    );
+}
+
+#[test]
+fn config_forget_vault_removes_and_clears_current() {
+    let mut cfg = AppConfig::default();
+    cfg.remember_vault(Path::new("/a"));
+    cfg.remember_vault(Path::new("/b"));
+
+    cfg.forget_vault(Path::new("/b"));
+    assert!(cfg.vault_path.is_none());
+    assert_eq!(cfg.known_vaults(), vec![PathBuf::from("/a")]);
+
+    // Forgetting a non-current vault leaves the current one alone.
+    cfg.remember_vault(Path::new("/b"));
+    cfg.forget_vault(Path::new("/a"));
+    assert_eq!(cfg.vault_path.as_deref(), Some(Path::new("/b")));
+    assert_eq!(cfg.known_vaults(), vec![PathBuf::from("/b")]);
+}
+
+#[test]
+fn config_known_vaults_round_trip() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut cfg = AppConfig::default();
+    cfg.remember_vault(Path::new("/a"));
+    cfg.remember_vault(Path::new("/b"));
+    cfg.save_to(dir.path()).unwrap();
+    let loaded = AppConfig::load_from(dir.path()).unwrap();
+    assert_eq!(loaded.known_vaults(), cfg.known_vaults());
+    assert_eq!(loaded.vault_path, cfg.vault_path);
+}
+
+// -------------------------------------------------------------- vault delete
+
+#[test]
+fn delete_removes_vault_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().join("v");
+    Vault::create(&root).unwrap();
+    Vault::delete(&root).unwrap();
+    assert!(!root.exists());
+}
+
+#[test]
+fn delete_refuses_directory_without_marker() {
+    let dir = tempfile::tempdir().unwrap();
+    let plain = dir.path().join("not-a-vault");
+    fs::create_dir(&plain).unwrap();
+    fs::write(plain.join("precious.txt"), "keep me").unwrap();
+
+    let result = Vault::delete(&plain);
+    assert!(result.is_err());
+    assert!(plain.join("precious.txt").exists());
+}
+
+#[test]
+fn delete_refuses_missing_path() {
+    let dir = tempfile::tempdir().unwrap();
+    let missing = dir.path().join("nope");
+    assert!(Vault::delete(&missing).is_err());
+    assert!(!missing.exists());
 }
 
 // ------------------------------------------------------------------ watcher
