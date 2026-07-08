@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import * as ipc from "./vault/ipc";
@@ -12,6 +12,7 @@ beforeEach(() => {
   vi.mocked(ipc.docList).mockResolvedValue([]);
   vi.mocked(ipc.scheduleList).mockResolvedValue([]);
   vi.mocked(ipc.onVaultChanged).mockReturnValue(() => {});
+  vi.mocked(ipc.vaultListKnown).mockResolvedValue(["/vault"]);
 });
 
 describe("App", () => {
@@ -57,5 +58,19 @@ describe("App", () => {
     expect(
       screen.getByRole("region", { name: "study plan" }),
     ).toBeInTheDocument();
+  });
+
+  it("opens the vault settings modal from the status bar and closes it on Escape", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "vault settings" }));
+    const dialog = await screen.findByRole("dialog", { name: "vault settings" });
+    await waitFor(() => expect(dialog).toHaveFocus());
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

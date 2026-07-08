@@ -21,6 +21,7 @@
   --accent-bg: #241f3a;
 
   /* lines */
+  --overlay: rgb(0 0 0 / 0.6);
   --border: #222230;
   --border-focus: var(--accent);
 

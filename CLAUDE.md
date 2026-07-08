@@ -15,7 +15,7 @@ src/                    React frontend
   styles/app.css        all layout/page styling
   components/           shared chrome (Page, StatusBar)
   keyboard/             keymap combo matching + useKeymap window listener (seed of the command registry)
-  vault/                ipc.ts — typed invoke layer (the only module importing @tauri-apps/api) + useVault open/create hooks + shared VaultGate
+  vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the status bar)
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor
   schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
   plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, status, progress) + usePlans query/mutation hooks
@@ -24,8 +24,8 @@ src/                    React frontend
   pages/                one page per feature (Home, Notes, Plans, Schedule) + pages.ts registry
 src-tauri/              Rust shell
   src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher
-  src/config.rs         app config (~/.config/studium/config.toml — remembered vault path)
-  src/commands.rs       Tauri invoke surface (vault_open/create, doc_list/read/write, schedule_list) + vault:changed event
+  src/config.rs         app config (~/.config/studium/config.toml — current vault path + known-vaults list)
+  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write, schedule_list) + vault:changed event
   tests/vault_core.rs   integration + property tests for all of the above
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
 docs/                   initialPlan.md (source of truth), ReferenceImage.md, adr/ (architecture decision records)

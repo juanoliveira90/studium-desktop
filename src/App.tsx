@@ -4,9 +4,11 @@ import { useKeymap } from "./keyboard/useKeymap";
 import { StatusBar } from "./components/StatusBar";
 import { PAGES, type PageId } from "./pages/pages";
 import { onVaultChanged } from "./vault/ipc";
+import { VaultSettingsModal } from "./vault/VaultSettingsModal";
 
 function App() {
   const [active, setActive] = useState<PageId>("home");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );
@@ -43,8 +45,14 @@ function App() {
         <main className="page-container">
           <Component />
         </main>
-        <StatusBar pages={PAGES} activeId={active} onSelect={setActive} />
+        <StatusBar
+          pages={PAGES}
+          activeId={active}
+          onSelect={setActive}
+          onSettings={() => setSettingsOpen(true)}
+        />
       </div>
+      {settingsOpen && <VaultSettingsModal onClose={() => setSettingsOpen(false)} />}
     </QueryClientProvider>
   );
 }

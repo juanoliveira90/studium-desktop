@@ -27,7 +27,7 @@ Decisions made with the user:
 
 ## Vault design
 
-User picks/creates a vault directory on first run (remembered in `~/.config/studium/config.toml`). Vault layout:
+User picks/creates a vault directory on first run via the native folder picker (remembered in `~/.config/studium/config.toml`, which also keeps the list of every vault opened so far). The status bar's `⚙ vault` button opens a settings modal to create new vaults, switch between known ones, forget one (files stay on disk), or delete its files entirely (marker-validated, double-confirmed). Vault layout:
 
 ```
 vault/

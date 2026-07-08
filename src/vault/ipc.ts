@@ -7,6 +7,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 
 /** Mirror of the Rust `DocPayload` in commands.rs. */
 export interface DocPayload {
@@ -32,6 +33,27 @@ export function vaultOpen(path: string): Promise<VaultInfo> {
 
 export function vaultCreate(path: string): Promise<VaultInfo> {
   return invoke("vault_create", { path });
+}
+
+/** Every vault the user has opened, per the app config. */
+export function vaultListKnown(): Promise<string[]> {
+  return invoke("vault_list_known");
+}
+
+/** Forgets a vault (files stay on disk); returns the updated known list. */
+export function vaultForget(path: string): Promise<string[]> {
+  return invoke("vault_forget", { path });
+}
+
+/** Deletes a vault's files from disk; returns the updated known list. */
+export function vaultDelete(path: string): Promise<string[]> {
+  return invoke("vault_delete", { path });
+}
+
+/** Native folder picker; resolves to null when the user cancels. */
+export async function pickFolder(): Promise<string | null> {
+  const selection = await openDialog({ directory: true });
+  return typeof selection === "string" ? selection : null;
 }
 
 /** Vault-relative paths of every markdown file under `dir`, sorted. */
