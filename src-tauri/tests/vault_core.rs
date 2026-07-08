@@ -318,6 +318,53 @@ fn path_traversal_is_rejected() {
     }
 }
 
+#[test]
+fn remove_deletes_a_single_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    fs::write(vault.root().join("notes/gone.md"), "bye").unwrap();
+
+    vault.remove("notes/gone.md").unwrap();
+    assert!(!vault.root().join("notes/gone.md").exists());
+    // the parent directory stays put
+    assert!(vault.root().join("notes").is_dir());
+}
+
+#[test]
+fn remove_deletes_a_directory_recursively() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    fs::create_dir_all(vault.root().join("plans/calc/subjects")).unwrap();
+    fs::write(vault.root().join("plans/calc/plan.md"), "p").unwrap();
+    fs::write(vault.root().join("plans/calc/subjects/x.md"), "x").unwrap();
+
+    vault.remove("plans/calc").unwrap();
+    assert!(!vault.root().join("plans/calc").exists());
+    // sibling plans and the plans/ root are untouched
+    assert!(vault.root().join("plans").is_dir());
+}
+
+#[test]
+fn remove_rejects_traversal_and_empty_paths() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    for bad in ["", "  ", "../escape", "notes/../../escape"] {
+        assert!(
+            matches!(vault.remove(bad), Err(VaultError::InvalidPath { .. })),
+            "remove should reject {bad:?}"
+        );
+    }
+    // the root survives a bare-empty removal attempt
+    assert!(vault.root().is_dir());
+}
+
+#[test]
+fn remove_missing_path_is_an_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    assert!(vault.remove("notes/ghost.md").is_err());
+}
+
 // -------------------------------------------------------------- sample vault
 
 #[test]

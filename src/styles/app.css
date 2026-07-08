@@ -150,6 +150,48 @@
   border-color: var(--err);
 }
 
+/* ── context menu ──────────────────────────────────────── */
+
+.context-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.context-menu {
+  position: fixed;
+  list-style: none;
+  min-width: 140px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  padding: var(--sp-1);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.context-menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 2px var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--fg-dim);
+}
+
+.context-menu-item:hover {
+  color: var(--fg-bright);
+  background: var(--bg-raised);
+}
+
+.context-menu-item.is-danger {
+  color: var(--err);
+}
+
+.context-menu-item.is-danger:hover {
+  color: var(--err);
+  background: var(--bg-raised);
+}
+
 /* ── page chrome ───────────────────────────────────────── */
 
 .page {

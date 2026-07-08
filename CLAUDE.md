@@ -13,7 +13,7 @@ src/                    React frontend
   styles/tokens.css     theme API — every color/font/spacing as CSS vars; themes override only these
   styles/base.css       reset + global element styles
   styles/app.css        all layout/page styling
-  components/           shared chrome (Page, StatusBar)
+  components/           shared chrome (Page, StatusBar) + ContextMenu (right-click delete menu) / useContextMenu
   keyboard/             keymap combo matching + useKeymap window listener (seed of the command registry)
   vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the status bar)
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor
@@ -25,7 +25,7 @@ src/                    React frontend
 src-tauri/              Rust shell
   src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher
   src/config.rs         app config (~/.config/studium/config.toml — current vault path + known-vaults list)
-  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write, schedule_list) + vault:changed event
+  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write/delete, schedule_list) + vault:changed event
   tests/vault_core.rs   integration + property tests for all of the above
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
 docs/                   initialPlan.md (source of truth), ReferenceImage.md, adr/ (architecture decision records)

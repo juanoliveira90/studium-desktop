@@ -60,6 +60,7 @@ beforeEach(() => {
     return doc;
   });
   vi.mocked(ipc.docWrite).mockResolvedValue(undefined);
+  vi.mocked(ipc.docDelete).mockResolvedValue(undefined);
   vi.mocked(ipc.onVaultChanged).mockReturnValue(() => {});
 });
 
@@ -216,6 +217,21 @@ describe("NotesPage", () => {
       "# Scratch pad\n\n",
     );
     delete DOCS["notes/scratch-pad.md"];
+  });
+
+  it("deletes a note from a right-click, after confirming", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const row = await screen.findByRole("button", { name: /Gym routine/ });
+    await user.pointer({ keys: "[MouseRight]", target: row });
+    // first click arms, does not delete
+    await user.click(screen.getByRole("menuitem", { name: "delete note" }));
+    expect(ipc.docDelete).not.toHaveBeenCalled();
+    // second click confirms
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.docDelete).toHaveBeenCalledWith("notes/gym-routine.md");
   });
 
   it("shows the vault gate when no vault is remembered, and opens one", async () => {

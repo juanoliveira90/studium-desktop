@@ -76,6 +76,7 @@ beforeEach(() => {
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.scheduleList).mockResolvedValue(SCHEDULE);
   vi.mocked(ipc.docWrite).mockResolvedValue(undefined);
+  vi.mocked(ipc.docDelete).mockResolvedValue(undefined);
   vi.mocked(ipc.onVaultChanged).mockReturnValue(() => {});
   mockDocs(SAMPLE_DOCS);
 });
@@ -262,6 +263,54 @@ describe("PlansPage", () => {
     await user.click(await screen.findByText("Linear Algebra"));
     // one editable subject (matrices) → exactly one add-task row
     expect(screen.getAllByRole("button", { name: "+ new task" })).toHaveLength(1);
+  });
+
+  it("deletes a plan directory from a right-click, after confirming", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const row = await screen.findByRole("button", { name: /Calculus II/ });
+    await user.pointer({ keys: "[MouseRight]", target: row });
+    // first click arms, does not delete
+    await user.click(screen.getByRole("menuitem", { name: "delete plan" }));
+    expect(ipc.docDelete).not.toHaveBeenCalled();
+    // second click confirms
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.docDelete).toHaveBeenCalledWith("plans/calculus-ii");
+  });
+
+  it("deletes a subject file from a right-click on its label", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Linear Algebra"));
+    await user.pointer({ keys: "[MouseRight]", target: screen.getByText("matrices") });
+    await user.click(screen.getByRole("menuitem", { name: "delete subject" }));
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.docDelete).toHaveBeenCalledWith("plans/linear-algebra/subjects/matrices.md");
+  });
+
+  it("removes a subtask from its subject file on a right-click delete", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Linear Algebra"));
+    const task = screen.getByRole("button", { name: /gaussian elimination practice/ });
+    await user.pointer({ keys: "[MouseRight]", target: task });
+    await user.click(screen.getByRole("menuitem", { name: "delete task" }));
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.docWrite).toHaveBeenCalledWith(
+      "plans/linear-algebra/subjects/matrices.md",
+      {
+        tag: "matrices",
+        subtasks: [{ name: "matrix factorizations (LU)", done: false }],
+      },
+      "",
+    );
+    expect(ipc.docDelete).not.toHaveBeenCalled();
   });
 
   it("returns from the plan detail to the list on escape", async () => {

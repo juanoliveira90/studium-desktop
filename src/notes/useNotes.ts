@@ -6,7 +6,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { docList, docRead, docWrite } from "../vault/ipc";
+import { docDelete, docList, docRead, docWrite } from "../vault/ipc";
 import { newNoteDoc, noteFromDoc, sortNotes, todayISO, type Note } from "./note";
 
 export const NOTES_KEY = ["docs", "notes"] as const;
@@ -30,6 +30,15 @@ export function useSaveNote() {
   return useMutation({
     mutationFn: ({ note, body }: { note: Note; body: string }) =>
       docWrite(note.path, { ...note.frontmatter, updated: todayISO() }, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: NOTES_KEY }),
+  });
+}
+
+/** Deletes a note's file from the vault. */
+export function useDeleteNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (path: string) => docDelete(path),
     onSuccess: () => qc.invalidateQueries({ queryKey: NOTES_KEY }),
   });
 }

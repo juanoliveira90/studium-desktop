@@ -162,6 +162,17 @@ export function toggleSubtaskFrontmatter(
   return { ...subject.frontmatter, subtasks };
 }
 
+/** New frontmatter for a subject with one subtask removed. */
+export function removeSubtaskFrontmatter(
+  subject: Subject,
+  index: number,
+): Record<string, unknown> {
+  const subtasks = subject.subtasks
+    .filter((_, i) => i !== index)
+    .map((t) => ({ name: t.name, done: t.done }));
+  return { ...subject.frontmatter, subtasks };
+}
+
 /** Path, frontmatter and body for a freshly created plan, starting today. */
 export function newPlanDoc(name: string, today: string) {
   return {

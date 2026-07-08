@@ -7,13 +7,14 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { docList, docRead, docWrite } from "../vault/ipc";
+import { docDelete, docList, docRead, docWrite } from "../vault/ipc";
 import { todayISO } from "../notes/note";
 import {
   addSubtaskFrontmatter,
   newPlanDoc,
   newSubjectDoc,
   plansFromDocs,
+  removeSubtaskFrontmatter,
   toggleSubtaskFrontmatter,
   type Subject,
 } from "./plan";
@@ -75,6 +76,34 @@ export function useToggleSubtask() {
   return useMutation({
     mutationFn: ({ subject, index }: { subject: Subject; index: number }) =>
       docWrite(subject.path, toggleSubtaskFrontmatter(subject, index), subject.body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
+
+/** Deletes a whole plan directory (plans/<slug>/) from the vault. */
+export function useDeletePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (slug: string) => docDelete(`plans/${slug}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
+
+/** Deletes a subject file from its plan. */
+export function useDeleteSubject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (path: string) => docDelete(path),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
+  });
+}
+
+/** Removes one subtask from its subject file, preserving the body. */
+export function useDeleteSubtask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subject, index }: { subject: Subject; index: number }) =>
+      docWrite(subject.path, removeSubtaskFrontmatter(subject, index), subject.body),
     onSuccess: () => qc.invalidateQueries({ queryKey: PLANS_KEY }),
   });
 }

@@ -184,6 +184,13 @@ pub fn doc_write(
     })
 }
 
+/// Deletes a file or directory (recursively) at a vault-relative path —
+/// a note or subject file, or a whole `plans/<slug>` directory.
+#[tauri::command]
+pub fn doc_delete(state: State<'_, VaultState>, path: String) -> Result<(), String> {
+    with_vault(&state, |vault| vault.remove(&path).map_err(|e| e.to_string()))
+}
+
 /// The weekly schedule: one entry per frontmatter block of `schedule.md`.
 #[tauri::command]
 pub fn schedule_list(state: State<'_, VaultState>) -> Result<Vec<ScheduleEntry>, String> {

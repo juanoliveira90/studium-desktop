@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Page } from "../components/Page";
+import { type ContextMenuItem } from "../components/ContextMenu";
+import { useContextMenu } from "../components/useContextMenu";
 import { formatDateRange, formatShortDate } from "../data/format";
 import { todayISO } from "../notes/note";
 import {
@@ -14,6 +16,9 @@ import {
   useAddSubtask,
   useCreatePlan,
   useCreateSubject,
+  useDeletePlan,
+  useDeleteSubject,
+  useDeleteSubtask,
   usePlans,
   useToggleSubtask,
 } from "../plans/usePlans";
@@ -141,6 +146,8 @@ function PlanList({
 }) {
   const [tab, setTab] = useState<PlanStatus>("active");
   const createPlan = useCreatePlan();
+  const deletePlan = useDeletePlan();
+  const { menu, open: openMenu } = useContextMenu();
 
   const today = todayISO();
   const shown = plans.filter((p) => planStatus(p, today) === tab);
@@ -166,7 +173,19 @@ function PlanList({
           const color = colors.get(p.slug);
           return (
             <li key={p.slug}>
-              <button className="plan-head" onClick={() => onOpen(p.slug)}>
+              <button
+                className="plan-head"
+                onClick={() => onOpen(p.slug)}
+                onContextMenu={(e) =>
+                  openMenu(e, [
+                    {
+                      label: "delete plan",
+                      confirmLabel: "really delete?",
+                      onSelect: () => deletePlan.mutate(p.slug),
+                    },
+                  ])
+                }
+              >
                 <span
                   className="dot"
                   style={color !== undefined ? { color: `var(--block-${color})` } : undefined}
@@ -204,6 +223,7 @@ function PlanList({
           couldn&apos;t be read: {errors.join("; ")}
         </p>
       )}
+      {menu}
     </>
   );
 }
@@ -225,6 +245,9 @@ function PlanDetail({
 }) {
   const toggle = useToggleSubtask();
   const createSubject = useCreateSubject();
+  const deleteSubject = useDeleteSubject();
+  const deleteSubtask = useDeleteSubtask();
+  const { menu, open: openMenu } = useContextMenu();
 
   // window-level so escape works without any element focused
   useEffect(() => {
@@ -254,7 +277,14 @@ function PlanDetail({
       </div>
       <div className="plan-range">{rangeLabel(plan)}</div>
       {plan.subjects.map((s) => (
-        <SubjectChecklist key={s.path} subject={s} onToggle={toggle.mutate} />
+        <SubjectChecklist
+          key={s.path}
+          subject={s}
+          onToggle={toggle.mutate}
+          openMenu={openMenu}
+          onDeleteSubject={(subject) => deleteSubject.mutate(subject.path)}
+          onDeleteSubtask={deleteSubtask.mutate}
+        />
       ))}
       {plan.subjects.length === 0 && <p className="muted">no subjects yet</p>}
       <AddRow
@@ -265,6 +295,7 @@ function PlanDetail({
           createSubject.mutate({ planSlug: plan.slug, tag }, { onSuccess: close })
         }
       />
+      {menu}
     </div>
   );
 }
@@ -272,15 +303,32 @@ function PlanDetail({
 function SubjectChecklist({
   subject,
   onToggle,
+  openMenu,
+  onDeleteSubject,
+  onDeleteSubtask,
 }: {
   subject: Subject;
   onToggle: (args: { subject: Subject; index: number }) => void;
+  openMenu: (e: React.MouseEvent, items: ContextMenuItem[]) => void;
+  onDeleteSubject: (subject: Subject) => void;
+  onDeleteSubtask: (args: { subject: Subject; index: number }) => void;
 }) {
   const addSubtask = useAddSubtask();
 
   return (
     <div className="subject">
-      <div className="section-label">
+      <div
+        className="section-label"
+        onContextMenu={(e) =>
+          openMenu(e, [
+            {
+              label: "delete subject",
+              confirmLabel: "really delete?",
+              onSelect: () => onDeleteSubject(subject),
+            },
+          ])
+        }
+      >
         {subject.tag}
         {subject.frontmatterError && (
           <span className="warn" title={subject.frontmatterError}>
@@ -295,6 +343,15 @@ function SubjectChecklist({
             <button
               className={`subtask${t.done ? " is-done" : ""}`}
               onClick={() => onToggle({ subject, index: i })}
+              onContextMenu={(e) =>
+                openMenu(e, [
+                  {
+                    label: "delete task",
+                    confirmLabel: "really delete?",
+                    onSelect: () => onDeleteSubtask({ subject, index: i }),
+                  },
+                ])
+              }
             >
               {t.done ? "☑" : "☐"} {t.name}
             </button>

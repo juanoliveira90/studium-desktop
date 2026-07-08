@@ -18,6 +18,7 @@ pub fn run() {
             commands::doc_list,
             commands::doc_read,
             commands::doc_write,
+            commands::doc_delete,
             commands::schedule_list,
         ])
         .run(tauri::generate_context!())
