@@ -56,8 +56,9 @@ impl AppConfig {
         all
     }
 
-    /// Makes `path` the current vault and adds it to the list if absent.
-    pub fn remember_vault(&mut self, path: &Path) {
+    /// Sets `path` as the current vault and adds it to the known-vaults
+    /// list if it isn't already there.
+    pub fn set_and_remember_vault(&mut self, path: &Path) {
         let already_listed = self.vaults.iter().any(|v| v == path);
         if !already_listed {
             self.vaults.push(path.to_path_buf());

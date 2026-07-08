@@ -244,7 +244,7 @@ fn install_vault(
 
     if let Some(dir) = AppConfig::default_dir() {
         let mut cfg = AppConfig::load_from(&dir).unwrap_or_default();
-        cfg.remember_vault(&root);
+        cfg.set_and_remember_vault(&root);
         // Remembering the vault is best-effort; failing to write config
         // must not block opening it.
         let _ = cfg.save_to(&dir);

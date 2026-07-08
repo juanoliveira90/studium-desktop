@@ -469,11 +469,11 @@ fn config_old_file_without_vaults_still_loads() {
 }
 
 #[test]
-fn config_remember_vault_sets_current_and_dedupes() {
+fn config_set_and_remember_vault_sets_current_and_dedupes() {
     let mut cfg = AppConfig::default();
-    cfg.remember_vault(Path::new("/a"));
-    cfg.remember_vault(Path::new("/b"));
-    cfg.remember_vault(Path::new("/a"));
+    cfg.set_and_remember_vault(Path::new("/a"));
+    cfg.set_and_remember_vault(Path::new("/b"));
+    cfg.set_and_remember_vault(Path::new("/a"));
     assert_eq!(cfg.vault_path.as_deref(), Some(Path::new("/a")));
     assert_eq!(
         cfg.known_vaults(),
@@ -505,15 +505,15 @@ fn config_known_vaults_merges_legacy_current_without_duplicating() {
 #[test]
 fn config_forget_vault_removes_and_clears_current() {
     let mut cfg = AppConfig::default();
-    cfg.remember_vault(Path::new("/a"));
-    cfg.remember_vault(Path::new("/b"));
+    cfg.set_and_remember_vault(Path::new("/a"));
+    cfg.set_and_remember_vault(Path::new("/b"));
 
     cfg.forget_vault(Path::new("/b"));
     assert!(cfg.vault_path.is_none());
     assert_eq!(cfg.known_vaults(), vec![PathBuf::from("/a")]);
 
     // Forgetting a non-current vault leaves the current one alone.
-    cfg.remember_vault(Path::new("/b"));
+    cfg.set_and_remember_vault(Path::new("/b"));
     cfg.forget_vault(Path::new("/a"));
     assert_eq!(cfg.vault_path.as_deref(), Some(Path::new("/b")));
     assert_eq!(cfg.known_vaults(), vec![PathBuf::from("/b")]);
@@ -523,8 +523,8 @@ fn config_forget_vault_removes_and_clears_current() {
 fn config_known_vaults_round_trip() {
     let dir = tempfile::tempdir().unwrap();
     let mut cfg = AppConfig::default();
-    cfg.remember_vault(Path::new("/a"));
-    cfg.remember_vault(Path::new("/b"));
+    cfg.set_and_remember_vault(Path::new("/a"));
+    cfg.set_and_remember_vault(Path::new("/b"));
     cfg.save_to(dir.path()).unwrap();
     let loaded = AppConfig::load_from(dir.path()).unwrap();
     assert_eq!(loaded.known_vaults(), cfg.known_vaults());
