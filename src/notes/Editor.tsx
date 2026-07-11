@@ -10,22 +10,36 @@ import { useEffect, useRef } from "react";
 import { EditorView, minimalSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { indentUnit } from "@codemirror/language";
+import { Compartment, type Extension } from "@codemirror/state";
 import { indentWithTab } from "@codemirror/commands";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { livePreview } from "./livePreview";
+
+/** "live" renders markdown in place (Obsidian-style); "raw" is plain source. */
+export type EditorMode = "live" | "raw";
+
+function modeExtension(mode: EditorMode): Extension {
+  return mode === "live" ? livePreview() : [];
+}
 
 interface EditorProps {
   value: string;
   onChange: (body: string) => void;
+  mode?: EditorMode;
   /** Test hook: receives the underlying view once created. */
   onReady?: (view: EditorView) => void;
 }
 
-export function Editor({ value, onChange, onReady }: EditorProps) {
+export function Editor({ value, onChange, mode = "live", onReady }: EditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   const initialValue = useRef(value);
+  const initialMode = useRef(mode);
   const onReadyRef = useRef(onReady);
+  // Compartment instead of remounting on mode change: reconfiguring in place
+  // preserves undo history, cursor, scroll, and focus mid-edit.
+  const modeCompartment = useRef(new Compartment());
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -37,7 +51,10 @@ export function Editor({ value, onChange, onReady }: EditorProps) {
       parent: hostRef.current!,
       extensions: [
         minimalSetup,
-        markdown(),
+        // GFM base so strikethrough/task-list nodes exist for live preview;
+        // harmless in raw mode.
+        markdown({ base: markdownLanguage }),
+        modeCompartment.current.of(modeExtension(initialMode.current)),
         // Tab indents inside the editor (4 spaces) rather than moving focus
         // between page/footer elements; Shift+Tab dedents.
         indentUnit.of("    "),
@@ -56,6 +73,12 @@ export function Editor({ value, onChange, onReady }: EditorProps) {
       viewRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: modeCompartment.current.reconfigure(modeExtension(mode)),
+    });
+  }, [mode]);
 
   useEffect(() => {
     const view = viewRef.current;
