@@ -30,6 +30,7 @@ day: thu
 start: "14:00"
 end: "16:00"
 title: sicp reading
+description: one section + exercises
 ---
 ---
 day: fri

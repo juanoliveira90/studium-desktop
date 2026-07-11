@@ -45,7 +45,7 @@ vault/
         └── *.css                  # user themes
 ```
 
-- `schedule.md`: list of blocks with quoted time strings (`start: "09:30"`) in per-block frontmatter-style sections; links to plans via `[[plan-slug]]` wiki-links. Times always written quoted to dodge YAML coercion.
+- `schedule.md`: list of blocks with quoted time strings (`start: "09:30"`) in per-block frontmatter-style sections; each block has `day`/`start`/`end`/`title`, an optional free-text `description`, and links to plans via `[[plan-slug]]` wiki-links. Times always written quoted to dodge YAML coercion. Blocks are addressed by position: `schedule_add/update/delete` rewrite one block and keep every other block byte-identical (hand-edited or malformed ones included).
 - Relations use directory/file slugs (rename = re-link; Rust side validates and reports dangling links rather than crashing).
 - App writes must preserve markdown bodies untouched; only frontmatter is rewritten, keys in stable order.
 - File watcher on the vault so hand-edits in vim/Obsidian appear live in the app.
@@ -55,7 +55,7 @@ vault/
 
 The app is **page-per-feature** — one full-window page per section, switched entirely by keyboard (this supersedes the reference image's 2×2 tiled layout; the content of each page stays true to its pane in the reference):
 
-- **Pages**: **home** (`alt+1` — logo/tagline, "today" checklist with durations, "today's events" from the schedule, "up next" derived from the next upcoming block); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — `active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); **weekly routine** (`alt+4` — the recurring weekly routine from `schedule.md`: hour rows 08:00–22:00 on a half-hour grid, weekday columns, blocks colored by their linked plan; no week nav since the schedule is a repeating template, not dated weeks).
+- **Pages**: **home** (`alt+1` — logo/tagline, "today" checklist with durations, "today's events" from the schedule, "up next" derived from the next upcoming block); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — `active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); **weekly routine** (`alt+4` — the recurring weekly routine from `schedule.md`: hour rows 08:00–22:00 on a half-hour grid, weekday columns, blocks colored by their linked plan; no week nav since the schedule is a repeating template, not dated weeks; `+ new event` form below the grid, click a block to edit it, right-click → delete with confirm).
 - **Page chrome**: each page has a lowercase title with its keybinding hinted in the corner (`notes (alt+2)`) — keybindings are discoverable from the UI itself.
 - **Status bar**: a slim i3bar-like strip docked at the bottom lists the pages with their keybindings and highlights the active one; items are clickable but keyboard is the primary path. (The strip at the top of the reference image remains the user's OS bar, not part of the app.)
 - **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, muted dark base with one accent color (purple in the reference — must derive entirely from the CSS variable theme layer so pywal retints everything).

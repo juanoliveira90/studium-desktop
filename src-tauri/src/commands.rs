@@ -168,12 +168,7 @@ pub fn doc_write(
     body: String,
 ) -> Result<(), String> {
     with_vault(&state, |vault| {
-        let mapping = match serde_yaml::to_value(&frontmatter) {
-            Ok(serde_yaml::Value::Mapping(m)) => m,
-            Ok(serde_yaml::Value::Null) => serde_yaml::Mapping::new(),
-            Ok(_) => return Err("frontmatter must be an object".to_string()),
-            Err(e) => return Err(e.to_string()),
-        };
+        let mapping = json_to_mapping(&frontmatter)?;
         // Start from the on-disk file when it exists so a doc whose YAML we
         // couldn't parse still keeps its body semantics; body is replaced,
         // frontmatter regenerated.
@@ -215,6 +210,66 @@ pub fn schedule_list(state: State<'_, VaultState>) -> Result<Vec<ScheduleEntry>,
             })
             .collect()
     })
+}
+
+/// Appends one event block to `schedule.md`.
+#[tauri::command]
+pub fn schedule_add(
+    state: State<'_, VaultState>,
+    frontmatter: serde_json::Value,
+) -> Result<(), String> {
+    with_vault(&state, |vault| {
+        let mapping = json_to_mapping(&frontmatter)?;
+        let mut docs = vault.read_all("schedule.md").map_err(|e| e.to_string())?;
+        let mut doc = Document::parse("");
+        doc.set_frontmatter(mapping);
+        docs.push(doc);
+        vault.write_all("schedule.md", &docs).map_err(|e| e.to_string())
+    })
+}
+
+/// Replaces the frontmatter of the `index`-th block of `schedule.md` (the
+/// position in `schedule_list`'s result). Every other block is preserved
+/// byte-identical.
+#[tauri::command]
+pub fn schedule_update(
+    state: State<'_, VaultState>,
+    index: usize,
+    frontmatter: serde_json::Value,
+) -> Result<(), String> {
+    with_vault(&state, |vault| {
+        let mapping = json_to_mapping(&frontmatter)?;
+        let mut docs = vault.read_all("schedule.md").map_err(|e| e.to_string())?;
+        let doc = docs
+            .get_mut(index)
+            .ok_or_else(|| format!("no schedule block at index {index}"))?;
+        doc.set_frontmatter(mapping);
+        vault.write_all("schedule.md", &docs).map_err(|e| e.to_string())
+    })
+}
+
+/// Removes the `index`-th block of `schedule.md`.
+#[tauri::command]
+pub fn schedule_delete(state: State<'_, VaultState>, index: usize) -> Result<(), String> {
+    with_vault(&state, |vault| {
+        let mut docs = vault.read_all("schedule.md").map_err(|e| e.to_string())?;
+        if index >= docs.len() {
+            return Err(format!("no schedule block at index {index}"));
+        }
+        docs.remove(index);
+        vault.write_all("schedule.md", &docs).map_err(|e| e.to_string())
+    })
+}
+
+/// A JSON frontmatter object from the webview as the YAML mapping the vault
+/// core writes. Null counts as empty; anything else isn't frontmatter.
+fn json_to_mapping(frontmatter: &serde_json::Value) -> Result<serde_yaml::Mapping, String> {
+    match serde_yaml::to_value(frontmatter) {
+        Ok(serde_yaml::Value::Mapping(m)) => Ok(m),
+        Ok(serde_yaml::Value::Null) => Ok(serde_yaml::Mapping::new()),
+        Ok(_) => Err("frontmatter must be an object".to_string()),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 fn with_vault<T>(

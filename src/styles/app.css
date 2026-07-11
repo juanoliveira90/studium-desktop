@@ -638,4 +638,54 @@ button.plan-head:hover .name {
   color: var(--fg-bright);
   overflow: hidden;
   z-index: 1;
+  cursor: pointer;
+}
+
+.week-block-desc {
+  display: block;
+  font-size: var(--fs-sm);
+  opacity: 0.75;
+}
+
+/* event add/edit form below the grid */
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  max-width: 480px;
+}
+
+.event-form-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.event-form input,
+.event-form select {
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border);
+}
+
+.event-form input[aria-label="start time"],
+.event-form input[aria-label="end time"] {
+  width: 8ch;
+}
+
+.event-form button {
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+}
+
+.event-form button:hover {
+  color: var(--fg-bright);
+  border-color: var(--accent-dim);
+}
+
+.event-form button[type="submit"] {
+  color: var(--fg);
 }

@@ -478,6 +478,106 @@ fn read_all_reads_schedule_blocks_through_the_vault() {
     );
 }
 
+#[test]
+fn write_all_round_trip_preserves_untouched_blocks() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    // Middle block has YAML we can't parse; editing another block must not
+    // destroy it.
+    let src = "---\nday: mon\nstart: \"08:00\"\n---\n---\n: [broken\n---\n\n---\nday: fri\ntitle: keep me\n---\n";
+    fs::write(vault.root().join("schedule.md"), src).unwrap();
+
+    let mut docs = vault.read_all("schedule.md").unwrap();
+    let mut fm = docs[0].frontmatter().unwrap();
+    fm.insert("title".into(), "run".into());
+    docs[0].set_frontmatter(fm);
+    vault.write_all("schedule.md", &docs).unwrap();
+
+    let raw = fs::read_to_string(vault.root().join("schedule.md")).unwrap();
+    assert!(raw.contains("title: run"));
+    // The malformed block (and the blank line riding on it) is byte-identical.
+    assert!(raw.contains("---\n: [broken\n---\n\n"));
+    assert!(raw.contains("title: keep me"));
+    assert_eq!(Document::parse_all(&raw).len(), 3);
+}
+
+#[test]
+fn write_all_appended_block_quotes_times_and_parses_back() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    fs::write(
+        vault.root().join("schedule.md"),
+        "---\nday: mon\nstart: \"08:00\"\nend: \"09:00\"\ntitle: run\n---\n",
+    )
+    .unwrap();
+
+    let mut docs = vault.read_all("schedule.md").unwrap();
+    let mut fm = serde_yaml::Mapping::new();
+    fm.insert("day".into(), "tue".into());
+    fm.insert("start".into(), "10:00".into());
+    fm.insert("end".into(), "11:30".into());
+    fm.insert("title".into(), "linear algebra".into());
+    let mut doc = Document::parse("");
+    doc.set_frontmatter(fm);
+    docs.push(doc);
+    vault.write_all("schedule.md", &docs).unwrap();
+
+    let raw = fs::read_to_string(vault.root().join("schedule.md")).unwrap();
+    assert!(raw.contains("start: \"10:00\""), "times stay quoted in {raw}");
+    let reread = vault.read_all("schedule.md").unwrap();
+    assert_eq!(reread.len(), 2);
+    let last = reread[1].frontmatter().unwrap();
+    assert_eq!(last.get("title").and_then(|v| v.as_str()), Some("linear algebra"));
+}
+
+#[test]
+fn write_all_separates_blocks_when_previous_lacks_trailing_newline() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    // Hand-edited file whose closing fence has no trailing newline.
+    fs::write(vault.root().join("schedule.md"), "---\nday: mon\n---").unwrap();
+
+    let mut docs = vault.read_all("schedule.md").unwrap();
+    let mut fm = serde_yaml::Mapping::new();
+    fm.insert("day".into(), "tue".into());
+    let mut doc = Document::parse("");
+    doc.set_frontmatter(fm);
+    docs.push(doc);
+    vault.write_all("schedule.md", &docs).unwrap();
+
+    let reread = vault.read_all("schedule.md").unwrap();
+    assert_eq!(reread.len(), 2);
+    assert_eq!(
+        reread[1].frontmatter().unwrap().get("day").and_then(|v| v.as_str()),
+        Some("tue")
+    );
+}
+
+#[test]
+fn write_all_removed_block_leaves_the_rest_intact() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    let src = "---\nday: mon\ntitle: a\n---\n---\nday: tue\ntitle: b\n---\n---\nday: wed\ntitle: c\n---\n";
+    fs::write(vault.root().join("schedule.md"), src).unwrap();
+
+    let mut docs = vault.read_all("schedule.md").unwrap();
+    docs.remove(1);
+    vault.write_all("schedule.md", &docs).unwrap();
+
+    let raw = fs::read_to_string(vault.root().join("schedule.md")).unwrap();
+    assert_eq!(raw, "---\nday: mon\ntitle: a\n---\n---\nday: wed\ntitle: c\n---\n");
+}
+
+#[test]
+fn write_all_empty_docs_writes_an_empty_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    fs::write(vault.root().join("schedule.md"), "---\nday: mon\n---\n").unwrap();
+
+    vault.write_all("schedule.md", &[]).unwrap();
+    assert_eq!(fs::read_to_string(vault.root().join("schedule.md")).unwrap(), "");
+}
+
 // ------------------------------------------------------------------- config
 
 #[test]

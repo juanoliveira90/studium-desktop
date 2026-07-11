@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SchedulePage } from "./SchedulePage";
 import * as ipc from "../vault/ipc";
@@ -22,6 +23,11 @@ beforeEach(() => {
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.scheduleList).mockResolvedValue(ENTRIES);
+  vi.mocked(ipc.scheduleAdd).mockResolvedValue(undefined);
+  vi.mocked(ipc.scheduleUpdate).mockResolvedValue(undefined);
+  vi.mocked(ipc.scheduleDelete).mockResolvedValue(undefined);
+  // the form's plan dropdown reads the plans/ tree; empty by default
+  vi.mocked(ipc.docList).mockResolvedValue([]);
   vi.mocked(ipc.onVaultChanged).mockReturnValue(() => {});
 });
 
@@ -109,6 +115,128 @@ describe("SchedulePage", () => {
 
     expect(await screen.findByText("mon")).toBeInTheDocument();
     expect(screen.queryByText(/couldn't be read/)).not.toBeInTheDocument();
+  });
+
+  it("adds an event through the form", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "+ new event" }));
+    await user.type(screen.getByLabelText("event title"), "morning run");
+    await user.type(screen.getByLabelText("event description"), "5k easy");
+    await user.selectOptions(screen.getByLabelText("event day"), "sat");
+    await user.type(screen.getByLabelText("start time"), "08:00");
+    await user.type(screen.getByLabelText("end time"), "09:15");
+    await user.click(screen.getByRole("button", { name: "add event" }));
+
+    expect(ipc.scheduleAdd).toHaveBeenCalledWith({
+      day: "sat",
+      start: "08:00",
+      end: "09:15",
+      title: "morning run",
+      description: "5k easy",
+    });
+    // the form closes back to the button on success
+    expect(await screen.findByRole("button", { name: "+ new event" })).toBeInTheDocument();
+  });
+
+  it("links a plan from the dropdown as a wiki-link", async () => {
+    vi.mocked(ipc.docList).mockResolvedValue(["plans/calculus-ii/plan.md"]);
+    vi.mocked(ipc.docRead).mockResolvedValue({
+      path: "plans/calculus-ii/plan.md",
+      frontmatter: { name: "Calculus II" },
+      frontmatter_error: null,
+      body: "",
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "+ new event" }));
+    await user.type(screen.getByLabelText("event title"), "review session");
+    await user.type(screen.getByLabelText("start time"), "13:00");
+    await user.type(screen.getByLabelText("end time"), "14:00");
+    await user.selectOptions(await screen.findByLabelText("linked plan"), "calculus-ii");
+    await user.click(screen.getByRole("button", { name: "add event" }));
+
+    expect(ipc.scheduleAdd).toHaveBeenCalledWith(
+      expect.objectContaining({ plan: "[[calculus-ii]]" }),
+    );
+  });
+
+  it("rejects invalid times and a missing title without writing", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "+ new event" }));
+    await user.click(screen.getByRole("button", { name: "add event" }));
+    expect(await screen.findByText(/title is required/)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("event title"), "x");
+    await user.type(screen.getByLabelText("start time"), "9am");
+    await user.click(screen.getByRole("button", { name: "add event" }));
+    expect(await screen.findByText(/start must be/)).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("start time"));
+    await user.type(screen.getByLabelText("start time"), "10:00");
+    await user.type(screen.getByLabelText("end time"), "09:00");
+    await user.click(screen.getByRole("button", { name: "add event" }));
+    expect(await screen.findByText(/end must be after start/)).toBeInTheDocument();
+
+    expect(ipc.scheduleAdd).not.toHaveBeenCalled();
+  });
+
+  it("edits an event by clicking its block", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("gym"));
+    const title = screen.getByLabelText("event title");
+    expect(title).toHaveValue("gym");
+    await user.clear(title);
+    await user.type(title, "gym session");
+    await user.click(screen.getByRole("button", { name: "save event" }));
+
+    // "gym" is the second entry of schedule.md
+    expect(ipc.scheduleUpdate).toHaveBeenCalledWith(1, {
+      day: "mon",
+      start: "17:00",
+      end: "18:30",
+      title: "gym session",
+    });
+  });
+
+  it("cancelling an edit writes nothing", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("gym"));
+    await user.click(screen.getByRole("button", { name: "cancel" }));
+
+    expect(screen.queryByLabelText("event title")).not.toBeInTheDocument();
+    expect(ipc.scheduleUpdate).not.toHaveBeenCalled();
+  });
+
+  it("deletes an event from the right-click menu after confirming", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const gym = await screen.findByText("gym");
+    await user.pointer({ keys: "[MouseRight]", target: gym });
+    await user.click(screen.getByRole("menuitem", { name: "delete event" }));
+    expect(ipc.scheduleDelete).not.toHaveBeenCalled(); // armed, not fired
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.scheduleDelete).toHaveBeenCalledWith(1);
+  });
+
+  it("shows a block's description under its title", async () => {
+    vi.mocked(ipc.scheduleList).mockResolvedValue([
+      { frontmatter: { day: "mon", start: "09:00", end: "11:00", title: "deep work", description: "thesis draft" }, frontmatter_error: null },
+    ]);
+    renderPage();
+
+    expect(await screen.findByText("deep work")).toBeInTheDocument();
+    expect(screen.getByText("thesis draft")).toBeInTheDocument();
   });
 
   it("asks for a vault when none is remembered", async () => {

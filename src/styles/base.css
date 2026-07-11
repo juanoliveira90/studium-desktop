@@ -32,12 +32,17 @@ button {
   cursor: pointer;
 }
 
-input {
+input,
+select {
   font: inherit;
   color: inherit;
   background: none;
   border: none;
   outline: none;
+}
+
+select option {
+  background: var(--bg-raised);
 }
 
 ::placeholder {

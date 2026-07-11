@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   blockDuration,
   blocksForDay,
+  eventFrontmatter,
   formatBlockTime,
   gridPlacement,
+  isValidTime,
   planColorBySlug,
   scheduleFromEntries,
   type ScheduleBlock,
@@ -16,6 +18,7 @@ const entry = (frontmatter: Record<string, unknown>): ScheduleEntry => ({
 });
 
 const block = (over: Partial<ScheduleBlock>): ScheduleBlock => ({
+  index: 0,
   day: "mon",
   start: "09:00",
   end: "10:00",
@@ -31,9 +34,27 @@ describe("scheduleFromEntries", () => {
     ]);
     expect(errors).toEqual([]);
     expect(blocks).toEqual([
-      { day: "mon", start: "09:30", end: "11:00", title: "calculus ii", plan: "calculus-ii" },
-      { day: "tue", start: "10:00", end: "12:00", title: "gym", plan: undefined },
+      { index: 0, day: "mon", start: "09:30", end: "11:00", title: "calculus ii", description: undefined, plan: "calculus-ii" },
+      { index: 1, day: "tue", start: "10:00", end: "12:00", title: "gym", description: undefined, plan: undefined },
     ]);
+  });
+
+  it("keeps a string description and drops non-string hand-edits", () => {
+    const { blocks } = scheduleFromEntries([
+      entry({ day: "mon", start: "09:00", end: "10:00", title: "x", description: "ch. 3 exercises" }),
+      entry({ day: "tue", start: "09:00", end: "10:00", title: "y", description: 123 }),
+    ]);
+    expect(blocks[0].description).toBe("ch. 3 exercises");
+    expect(blocks[1].description).toBeUndefined();
+  });
+
+  it("indexes blocks by their entry position, counting broken entries", () => {
+    const { blocks } = scheduleFromEntries([
+      { frontmatter: {}, frontmatter_error: "bad YAML" },
+      entry({ day: "mon", start: "09:00", end: "10:00", title: "after the broken one" }),
+    ]);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].index).toBe(1);
   });
 
   it("accepts a bare slug in plan", () => {
@@ -52,7 +73,7 @@ describe("scheduleFromEntries", () => {
       entry({ day: "fri", start: "10:00", end: "11:00", title: "fine" }),
     ]);
     expect(blocks).toEqual([
-      { day: "fri", start: "10:00", end: "11:00", title: "fine", plan: undefined },
+      { index: 4, day: "fri", start: "10:00", end: "11:00", title: "fine", description: undefined, plan: undefined },
     ]);
     expect(errors).toHaveLength(4);
     expect(errors[0]).toMatch(/block 1/);
@@ -121,6 +142,47 @@ describe("gridPlacement", () => {
 
   it("rounds off-grid times outward and keeps at least one row", () => {
     expect(gridPlacement(block({ start: "09:40", end: "09:55" }), 8, 22)).toEqual({ row: 3, span: 1 });
+  });
+});
+
+describe("isValidTime", () => {
+  it("accepts 24h HH:MM and rejects everything else", () => {
+    expect(isValidTime("00:00")).toBe(true);
+    expect(isValidTime("09:30")).toBe(true);
+    expect(isValidTime("23:59")).toBe(true);
+    expect(isValidTime("24:00")).toBe(false);
+    expect(isValidTime("9:30")).toBe(false);
+    expect(isValidTime("09:60")).toBe(false);
+    expect(isValidTime("9am")).toBe(false);
+    expect(isValidTime("")).toBe(false);
+  });
+});
+
+describe("eventFrontmatter", () => {
+  it("builds the vault-format frontmatter, wrapping the plan as a wiki-link", () => {
+    expect(
+      eventFrontmatter({
+        day: "mon",
+        start: "09:30",
+        end: "11:00",
+        title: "calculus ii",
+        description: "ch. 3 exercises",
+        plan: "calculus-ii",
+      }),
+    ).toEqual({
+      day: "mon",
+      start: "09:30",
+      end: "11:00",
+      title: "calculus ii",
+      description: "ch. 3 exercises",
+      plan: "[[calculus-ii]]",
+    });
+  });
+
+  it("omits empty optional fields instead of writing empty keys", () => {
+    expect(
+      eventFrontmatter({ day: "tue", start: "10:00", end: "12:00", title: "gym", description: "", plan: "" }),
+    ).toEqual({ day: "tue", start: "10:00", end: "12:00", title: "gym" });
   });
 });
 

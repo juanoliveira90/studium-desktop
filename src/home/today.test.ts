@@ -5,10 +5,10 @@ import { timeOf, todayChecklist, upNext, weekdayOf } from "./today";
 
 /** sample-vault's schedule, as the schedule model produces it. */
 const BLOCKS: ScheduleBlock[] = [
-  { day: "mon", start: "09:30", end: "11:00", title: "calculus ii", plan: "calculus-ii" },
-  { day: "mon", start: "17:00", end: "18:30", title: "gym" },
-  { day: "tue", start: "10:00", end: "12:00", title: "linear algebra", plan: "linear-algebra" },
-  { day: "thu", start: "14:00", end: "16:00", title: "sicp reading" },
+  { index: 0, day: "mon", start: "09:30", end: "11:00", title: "calculus ii", plan: "calculus-ii" },
+  { index: 1, day: "mon", start: "17:00", end: "18:30", title: "gym" },
+  { index: 2, day: "tue", start: "10:00", end: "12:00", title: "linear algebra", plan: "linear-algebra" },
+  { index: 3, day: "thu", start: "14:00", end: "16:00", title: "sicp reading" },
 ];
 
 const subject = (tag: string, subtasks: Subject["subtasks"]): Subject => ({
