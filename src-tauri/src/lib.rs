@@ -20,6 +20,9 @@ pub fn run() {
             commands::doc_write,
             commands::doc_delete,
             commands::schedule_list,
+            commands::schedule_add,
+            commands::schedule_update,
+            commands::schedule_delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

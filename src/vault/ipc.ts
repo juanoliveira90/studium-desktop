@@ -93,6 +93,25 @@ export function scheduleList(): Promise<ScheduleEntry[]> {
   return invoke("schedule_list");
 }
 
+/** Appends one event block to schedule.md. */
+export function scheduleAdd(frontmatter: Record<string, unknown>): Promise<void> {
+  return invoke("schedule_add", { frontmatter });
+}
+
+/** Replaces the frontmatter of the index-th block of schedule.md (the
+ *  position in scheduleList's result); other blocks are untouched. */
+export function scheduleUpdate(
+  index: number,
+  frontmatter: Record<string, unknown>,
+): Promise<void> {
+  return invoke("schedule_update", { index, frontmatter });
+}
+
+/** Removes the index-th block of schedule.md. */
+export function scheduleDelete(index: number): Promise<void> {
+  return invoke("schedule_delete", { index });
+}
+
 /**
  * Subscribes to the `vault:changed` watcher event. Returns an unsubscribe
  * function (safe to call before the underlying listen resolves).

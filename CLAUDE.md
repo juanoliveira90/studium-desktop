@@ -25,7 +25,7 @@ src/                    React frontend
 src-tauri/              Rust shell
   src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher
   src/config.rs         app config (~/.config/studium/config.toml — current vault path + known-vaults list)
-  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write/delete, schedule_list) + vault:changed event
+  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write/delete, schedule_list/add/update/delete) + vault:changed event
   tests/vault_core.rs   integration + property tests for all of the above
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
 docs/                   initialPlan.md (source of truth), ReferenceImage.md, adr/ (architecture decision records)

@@ -102,6 +102,24 @@ impl Vault {
         atomic_write(&path, &doc.to_string())
     }
 
+    /// Writes a multi-entry file (`schedule.md`) back as one frontmatter
+    /// block per document — the inverse of [`Vault::read_all`]. Documents
+    /// that came from `read_all` and weren't edited serialize byte-identical
+    /// (malformed blocks included); a newline is inserted between documents
+    /// only when the previous one doesn't already end with one.
+    pub fn write_all(&self, rel_path: &str, docs: &[Document]) -> Result<(), VaultError> {
+        let path = self.resolve(rel_path)?;
+        let mut contents = String::new();
+        for doc in docs {
+            let needs_separator = !contents.is_empty() && !contents.ends_with('\n');
+            if needs_separator {
+                contents.push('\n');
+            }
+            contents.push_str(&doc.to_string());
+        }
+        atomic_write(&path, &contents)
+    }
+
     /// Removes a file or directory (recursively) at `rel_path`. Rejects
     /// paths that escape the root, like every other vault operation, and
     /// refuses an empty path so the vault root itself can never be removed.

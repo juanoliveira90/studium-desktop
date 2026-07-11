@@ -15,16 +15,23 @@ export const WEEKDAYS: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "s
 
 /** One entry of schedule.md — a recurring weekly block. */
 export interface ScheduleBlock {
+  /** Position of the entry in schedule.md — the handle for update/delete. */
+  index: number;
   day: Weekday;
   /** "HH:MM", as quoted in frontmatter. */
   start: string;
   end: string;
   title: string;
+  /** Optional free-text line shown under the title. */
+  description?: string;
   /** Slug of the linked plan (`plan: "[[calculus-ii]]"`), if any. */
   plan?: string;
 }
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** True for the schedule's 24h "HH:MM" format — the form's validation. */
+export const isValidTime = (time: string) => TIME_RE.test(time);
 
 /** "HH:MM" → minutes since midnight. */
 export const toMinutes = (time: string) => {
@@ -52,8 +59,37 @@ const planSlug = (value: unknown): string | undefined => {
   return wiki ? wiki[1] : value;
 };
 
+/** What the event form edits; `eventFrontmatter` turns it into an entry. */
+export interface EventFields {
+  day: Weekday;
+  start: string;
+  end: string;
+  title: string;
+  description?: string;
+  /** Bare plan slug; wrapped as a wiki-link in the frontmatter. */
+  plan?: string;
+}
+
+/** Event fields → the frontmatter object of one schedule.md block, keys in
+ *  the vault format's order, optional fields omitted rather than empty. */
+export function eventFrontmatter(fields: EventFields): Record<string, unknown> {
+  const frontmatter: Record<string, unknown> = {
+    day: fields.day,
+    start: fields.start,
+    end: fields.end,
+    title: fields.title,
+  };
+  if (fields.description) {
+    frontmatter["description"] = fields.description;
+  }
+  if (fields.plan) {
+    frontmatter["plan"] = `[[${fields.plan}]]`;
+  }
+  return frontmatter;
+}
+
 /** One block's frontmatter → block, or the reason it can't be one. */
-const blockFromEntry = (entry: ScheduleEntry): ScheduleBlock | string => {
+const blockFromEntry = (entry: ScheduleEntry, index: number): ScheduleBlock | string => {
   if (entry.frontmatter_error) return entry.frontmatter_error;
   const { day, start, end, title } = entry.frontmatter;
   if (typeof day !== "string" || !WEEKDAYS.includes(day as Weekday)) {
@@ -71,11 +107,15 @@ const blockFromEntry = (entry: ScheduleEntry): ScheduleBlock | string => {
   if (typeof title !== "string" || title.trim() === "") {
     return "missing title";
   }
+  const description = entry.frontmatter["description"];
   return {
+    index,
     day: day as Weekday,
     start,
     end,
     title,
+    // hand-editable YAML: anything non-string is not a description
+    description: typeof description === "string" ? description : undefined,
     plan: planSlug(entry.frontmatter["plan"]),
   };
 };
@@ -92,7 +132,7 @@ export function scheduleFromEntries(entries: ScheduleEntry[]): {
   const blocks: ScheduleBlock[] = [];
   const errors: string[] = [];
   entries.forEach((entry, i) => {
-    const result = blockFromEntry(entry);
+    const result = blockFromEntry(entry, i);
     if (typeof result === "string") {
       errors.push(`block ${i + 1}: ${result}`);
     } else {
