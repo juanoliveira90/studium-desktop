@@ -16,8 +16,8 @@ src/                    React frontend
   components/           shared chrome (Page, StatusBar) + ContextMenu (right-click delete menu) / useContextMenu
   keyboard/             keymap combo matching + useKeymap window listener (seed of the command registry)
   vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the status bar)
-  notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor
-  schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors, event-form frontmatter) + useSchedule query/mutation hooks
+  notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor + livePreview.ts (Obsidian-style live preview decorations; Ctrl+E / header button toggles live↔raw, persisted in localStorage)
+  schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
   plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, status, progress) + usePlans query/mutation hooks
   home/                 home module: today.ts — pure aggregation over schedule + plans data (today checklist, up next, clock helpers)
   data/                 format.ts — shared date display formatting for the vault's ISO dates

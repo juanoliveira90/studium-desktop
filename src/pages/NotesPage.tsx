@@ -2,16 +2,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Page } from "../components/Page";
 import { useContextMenu } from "../components/useContextMenu";
 import { formatShortDate } from "../data/format";
-import { Editor } from "../notes/Editor";
+import { eventMatchesCombo } from "../keyboard/keymap";
+import { Editor, type EditorMode } from "../notes/Editor";
 import { filterNotes, noteTags, type Note } from "../notes/note";
 import { useCreateNote, useDeleteNote, useNotes, useSaveNote } from "../notes/useNotes";
 import { useVault } from "../vault/useVault";
 import { VaultGate } from "../vault/VaultGate";
 
+const EDITOR_MODE_KEY = "studium.notes.editorMode";
+
+function loadEditorMode(): EditorMode {
+  return localStorage.getItem(EDITOR_MODE_KEY) === "raw" ? "raw" : "live";
+}
+
 export function NotesPage() {
   const vault = useVault();
   const notesQuery = useNotes(Boolean(vault.data));
   const [openPath, setOpenPath] = useState<string | null>(null);
+  // Lives here rather than in NoteEditor (keyed by path, remounts per note)
+  // so the choice persists across notes; localStorage persists it across runs.
+  const [editorMode, setEditorMode] = useState<EditorMode>(loadEditorMode);
+
+  const toggleEditorMode = () => {
+    const next = editorMode === "live" ? "raw" : "live";
+    localStorage.setItem(EDITOR_MODE_KEY, next);
+    setEditorMode(next);
+  };
 
   let body;
   if (vault.isPending) {
@@ -30,6 +46,8 @@ export function NotesPage() {
       <NoteEditor
         key={openNote.path}
         note={openNote}
+        mode={editorMode}
+        onToggleMode={toggleEditorMode}
         onBack={() => setOpenPath(null)}
       />
     ) : (
@@ -183,7 +201,17 @@ const SAVE_DEBOUNCE_MS = 800;
  * never written back — regenerating their frontmatter would destroy whatever
  * the parser choked on — so they open effectively read-only.
  */
-function NoteEditor({ note, onBack }: { note: Note; onBack: () => void }) {
+function NoteEditor({
+  note,
+  mode,
+  onToggleMode,
+  onBack,
+}: {
+  note: Note;
+  mode: EditorMode;
+  onToggleMode: () => void;
+  onBack: () => void;
+}) {
   const save = useSaveNote();
   const [draft, setDraft] = useState<string>();
   const readOnly = Boolean(note.frontmatterError);
@@ -223,6 +251,12 @@ function NoteEditor({ note, onBack }: { note: Note; onBack: () => void }) {
         if (e.key === "Escape") {
           flush();
           onBack();
+        } else if (eventMatchesCombo(e.nativeEvent, "ctrl+e")) {
+          // Obsidian's edit/preview binding. Handled here (where Escape
+          // already lives) instead of a CM keymap so it can't double-fire;
+          // keydown bubbles out of CodeMirror to this div.
+          e.preventDefault();
+          onToggleMode();
         }
       }}
     >
@@ -233,9 +267,16 @@ function NoteEditor({ note, onBack }: { note: Note; onBack: () => void }) {
             ⚠ frontmatter unreadable — not saving ({note.frontmatterError})
           </span>
         )}
-        <span className="hint">esc to close</span>
+        <button
+          className="mode-toggle"
+          aria-label="toggle live preview"
+          onClick={onToggleMode}
+        >
+          {mode}
+        </button>
+        <span className="hint">ctrl+e mode · esc to close</span>
       </div>
-      <Editor value={draft ?? note.body} onChange={onChange} />
+      <Editor value={draft ?? note.body} onChange={onChange} mode={mode} />
     </div>
   );
 }

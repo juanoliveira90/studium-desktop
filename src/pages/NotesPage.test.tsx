@@ -9,11 +9,21 @@ import type { DocPayload } from "../vault/ipc";
 vi.mock("../vault/ipc");
 
 // The real CodeMirror editor has its own tests; a textarea keeps the page's
-// open/edit/save plumbing drivable with userEvent.
+// open/edit/save plumbing drivable with userEvent. `data-mode` exposes the
+// mode prop the page forwards.
 vi.mock("../notes/Editor", () => ({
-  Editor: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  Editor: ({
+    value,
+    onChange,
+    mode,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    mode?: string;
+  }) => (
     <textarea
       aria-label="note editor"
+      data-mode={mode ?? "live"}
       autoFocus // the real editor focuses itself on mount
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -50,6 +60,7 @@ const DOCS: Record<string, DocPayload> = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.vaultCreate).mockResolvedValue({ root: "/vault" });
@@ -256,6 +267,79 @@ describe("NotesPage", () => {
 
     const items = await screen.findAllByRole("listitem");
     expect(items[0]).toHaveTextContent("⚠");
+  });
+
+  it("opens the editor in live mode with a header button that toggles to raw", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Reading SICP/ }));
+    const editor = await screen.findByLabelText("note editor");
+    expect(editor).toHaveAttribute("data-mode", "live");
+
+    const toggle = screen.getByRole("button", { name: "toggle live preview" });
+    expect(toggle).toHaveTextContent("live");
+    await user.click(toggle);
+
+    expect(editor).toHaveAttribute("data-mode", "raw");
+    expect(toggle).toHaveTextContent("raw");
+    expect(localStorage.getItem("studium.notes.editorMode")).toBe("raw");
+  });
+
+  it("toggles the editor mode with Ctrl+E", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Reading SICP/ }));
+    const editor = await screen.findByLabelText("note editor");
+
+    await user.keyboard("{Control>}e{/Control}");
+    expect(editor).toHaveAttribute("data-mode", "raw");
+
+    await user.keyboard("{Control>}e{/Control}");
+    expect(editor).toHaveAttribute("data-mode", "live");
+  });
+
+  it("keeps the chosen mode when switching notes", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Reading SICP/ }));
+    await screen.findByLabelText("note editor");
+    await user.click(screen.getByRole("button", { name: "toggle live preview" }));
+    await user.keyboard("{Escape}");
+
+    await user.click(await screen.findByRole("button", { name: /Gym routine/ }));
+    expect(await screen.findByLabelText("note editor")).toHaveAttribute(
+      "data-mode",
+      "raw",
+    );
+  });
+
+  it("starts in the mode persisted in localStorage", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("studium.notes.editorMode", "raw");
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Reading SICP/ }));
+    expect(await screen.findByLabelText("note editor")).toHaveAttribute(
+      "data-mode",
+      "raw",
+    );
+  });
+
+  it("still flushes and closes with Escape after the mode changes", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: /Gym routine/ }));
+    const editor = await screen.findByLabelText("note editor");
+    await user.keyboard("{Control>}e{/Control}");
+    await user.type(editor, "extra");
+    await user.keyboard("{Escape}");
+
+    expect(screen.getByRole("textbox", { name: "search notes" })).toBeInTheDocument();
+    await waitFor(() => expect(ipc.docWrite).toHaveBeenCalled());
   });
 
   it("never writes back a note whose frontmatter failed to parse", async () => {
