@@ -89,7 +89,7 @@ describe("SchedulePage", () => {
   it("labels the schedule as the weekly routine, with no week navigation", async () => {
     renderPage();
 
-    expect(await screen.findByText("weekly routine")).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "weekly routine" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "previous week" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "next week" })).not.toBeInTheDocument();
   });

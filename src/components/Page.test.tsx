@@ -3,16 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { Page } from "./Page";
 
 describe("Page", () => {
-  it("renders the title as a heading", () => {
-    render(
-      <Page title="notes">
-        <p>body</p>
-      </Page>,
-    );
-
-    expect(screen.getByRole("heading", { name: "notes" })).toBeInTheDocument();
-  });
-
   it("renders children inside the page body", () => {
     render(
       <Page title="plans">
@@ -23,19 +13,15 @@ describe("Page", () => {
     expect(screen.getByText("some page content")).toBeInTheDocument();
   });
 
-  it("replaces the default heading when a custom header is provided", () => {
+  it("shows no visible title — the top bar already names the page", () => {
     render(
-      <Page title="week" header={<h2>custom header</h2>}>
+      <Page title="notes">
         <p>body</p>
       </Page>,
     );
 
-    expect(
-      screen.getByRole("heading", { name: "custom header" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "week" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByText("notes")).not.toBeInTheDocument();
   });
 
   it("is focusable and labelled by its title for keyboard navigation", () => {
