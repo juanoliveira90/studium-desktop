@@ -18,9 +18,9 @@
   --fg-faint: #b8b09c;
 
   /* accent */
-  --accent: #268bd2; /* blue */
-  --accent-dim: #82b3d6;
-  --accent-bg: #d6e8f4;
+  --accent: #8b5a2b; /* warm brown, in keeping with the solarized base */
+  --accent-dim: #c2a072;
+  --accent-bg: #eeddc0;
 
   /* lines */
   --overlay: rgb(0 43 54 / 0.4);
