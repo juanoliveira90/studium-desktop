@@ -2,56 +2,59 @@
  * Theme API — every color, font and spacing value the UI uses.
  * Themes (built-in, pywal/base16, user CSS in vault/.studium/themes/)
  * override these variables and nothing else.
+ *
+ * Default theme: Solarized Light (ethanschoonover.com/solarized).
  */
 :root {
   /* surfaces */
-  --bg: #0c0c11;
-  --bg-alt: #12121a;
-  --bg-raised: #1a1a26;
+  --bg: #fdf6e3; /* base3 */
+  --bg-alt: #eee8d5; /* base2 */
+  --bg-raised: #e3dcc5;
 
   /* text */
-  --fg: #b9bcca;
-  --fg-bright: #e2e4ee;
-  --fg-dim: #62667c;
-  --fg-faint: #3d4054;
+  --fg: #657b83; /* base00 */
+  --fg-bright: #073642; /* base02 */
+  --fg-dim: #93a1a1; /* base1 */
+  --fg-faint: #b8b09c;
 
   /* accent */
-  --accent: #8f7bd8;
-  --accent-dim: #57499a;
-  --accent-bg: #241f3a;
+  --accent: #8b5a2b; /* warm brown, in keeping with the solarized base */
+  --accent-dim: #c2a072;
+  --accent-bg: #eeddc0;
 
   /* lines */
-  --overlay: rgb(0 0 0 / 0.6);
-  --border: #222230;
+  --overlay: rgb(0 43 54 / 0.4);
+  --border: #d5cdb4;
   --border-focus: var(--accent);
 
-  /* semantic block colors (schedule, plan bullets) */
-  --block-1: #4d4380;
-  --block-2: #6a3a4a;
-  --block-3: #2f5a52;
-  --block-4: #3a4a6a;
+  /* semantic block colors (schedule, plan bullets) — lightened solarized
+     accents so they hold readable dark text as block backgrounds while
+     staying visible as bullet colors on the light base */
+  --block-1: #9295d0; /* violet */
+  --block-2: #58b5aa; /* cyan */
+  --block-3: #dd7fae; /* magenta */
+  --block-4: #c9ad4d; /* yellow */
 
   /* status */
-  --ok: #7fb98a;
-  --warn: #c9a86a;
-  --err: #c97a7a;
+  --ok: #859900;
+  --warn: #b58900;
+  --err: #dc322f;
 
-  /* typography */
-  --font-mono: "JetBrainsMono Nerd Font", "JetBrains Mono", "Fira Code",
+  /* typography — JetBrains Mono is bundled (imported in main.tsx) */
+  --font-mono: "JetBrains Mono", "JetBrainsMono Nerd Font", "Fira Code",
     "Source Code Pro", monospace;
-  --fs: 13px;
-  --fs-sm: 11px;
-  --fs-lg: 15px;
-  --fs-hero: 34px;
+  --fs: 15px;
+  --fs-sm: 13px;
+  --fs-lg: 17px;
+  --fs-hero: 38px;
 
   /* spacing scale */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
+  --sp-1: 5px;
+  --sp-2: 10px;
+  --sp-3: 15px;
+  --sp-4: 20px;
+  --sp-5: 30px;
 
   /* chrome */
-  --pane-gap: 10px;
-  --bar-height: 26px;
+  --bar-height: 42px;
 }

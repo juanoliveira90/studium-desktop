@@ -35,7 +35,7 @@ describe("App", () => {
     expect(screen.getByRole("region", { name: "home" })).toBeInTheDocument();
   });
 
-  it("switches pages by clicking the status bar", async () => {
+  it("switches pages by clicking the top bar", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -60,7 +60,7 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("opens the vault settings modal from the status bar and closes it on Escape", async () => {
+  it("opens the vault settings modal from the top bar and closes it on Escape", async () => {
     const user = userEvent.setup();
     render(<App />);
 
