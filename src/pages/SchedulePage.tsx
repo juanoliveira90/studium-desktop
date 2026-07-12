@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Page } from "../components/Page";
 import { useContextMenu } from "../components/useContextMenu";
 import { usePlans } from "../plans/usePlans";
@@ -53,10 +53,13 @@ export function SchedulePage() {
 }
 
 /** The week grid plus event CRUD: a form below the grid adds events, clicking
- *  a block loads it into the form, right-click deletes after confirming. */
+ *  a block opens the form in a popover beside it, right-click deletes after
+ *  confirming. */
 function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: string[] }) {
   // null: form closed; "new": adding; a block: editing that entry
   const [editing, setEditing] = useState<ScheduleBlock | "new" | null>(null);
+  // where the edited block sits on screen, so the form can anchor beside it
+  const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const addEvent = useAddEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -73,11 +76,26 @@ function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: s
     }
   };
 
+  const form = editing !== null && (
+    <EventForm
+      key={editing === "new" ? "new" : editing.index}
+      initial={editing === "new" ? undefined : editing}
+      plans={plansQuery.data?.plans ?? []}
+      submitLabel={editing === "new" ? "add event" : "save event"}
+      onSubmit={submit}
+      onCancel={close}
+      writeError={addEvent.error ?? updateEvent.error}
+    />
+  );
+
   return (
     <>
       <WeekGrid
         blocks={blocks}
-        onBlockClick={setEditing}
+        onBlockClick={(block, e) => {
+          setAnchor(e.currentTarget.getBoundingClientRect());
+          setEditing(block);
+        }}
         onBlockContextMenu={(e, block) =>
           openMenu(e, [
             {
@@ -88,20 +106,14 @@ function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: s
           ])
         }
       />
-      {editing === null ? (
+      {editing === null && (
         <button className="add-row" onClick={() => setEditing("new")}>
           + new event
         </button>
-      ) : (
-        <EventForm
-          key={editing === "new" ? "new" : editing.index}
-          initial={editing === "new" ? undefined : editing}
-          plans={plansQuery.data?.plans ?? []}
-          submitLabel={editing === "new" ? "add event" : "save event"}
-          onSubmit={submit}
-          onCancel={close}
-          writeError={addEvent.error ?? updateEvent.error}
-        />
+      )}
+      {editing === "new" && form}
+      {editing !== null && editing !== "new" && anchor && (
+        <EventPopover anchor={anchor}>{form}</EventPopover>
       )}
       {errors.length > 0 && (
         <p className="warn">
@@ -113,6 +125,36 @@ function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: s
     </>
   );
 }
+
+/** Floats its children beside the anchored block: to its right when there's
+ *  room, flipped to the left otherwise, clamped to stay inside the window. */
+function EventPopover({ anchor, children }: { anchor: DOMRect; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: anchor.top, left: anchor.right + POPOVER_GAP });
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+
+    const overflowsRight = anchor.right + POPOVER_GAP + width > window.innerWidth;
+    let left = overflowsRight ? anchor.left - POPOVER_GAP - width : anchor.right + POPOVER_GAP;
+    left = Math.max(POPOVER_GAP, left);
+
+    let top = Math.min(anchor.top, window.innerHeight - height - POPOVER_GAP);
+    top = Math.max(POPOVER_GAP, top);
+
+    setPos({ top, left });
+  }, [anchor]);
+
+  return (
+    <div ref={ref} className="event-popover" style={{ top: pos.top, left: pos.left }}>
+      {children}
+    </div>
+  );
+}
+
+const POPOVER_GAP = 8;
 
 /** What's wrong with the form's fields, or null when they make an event. */
 function validate(fields: EventFields): string | null {
@@ -240,7 +282,7 @@ function WeekGrid({
   onBlockContextMenu,
 }: {
   blocks: ScheduleBlock[];
-  onBlockClick: (block: ScheduleBlock) => void;
+  onBlockClick: (block: ScheduleBlock, e: React.MouseEvent<HTMLElement>) => void;
   onBlockContextMenu: (e: React.MouseEvent, block: ScheduleBlock) => void;
 }) {
   const planColors = planColorBySlug(blocks);
@@ -288,7 +330,7 @@ function WeekGrid({
             <div
               key={b.index}
               className="week-block"
-              onClick={() => onBlockClick(b)}
+              onClick={(e) => onBlockClick(b, e)}
               onContextMenu={(e) => onBlockContextMenu(e, b)}
               style={{
                 gridColumn: col + 2,

@@ -205,6 +205,30 @@ describe("SchedulePage", () => {
     });
   });
 
+  it("opens the edit form in a popover beside the clicked block", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const gym = await screen.findByText("gym");
+    gym.getBoundingClientRect = () =>
+      ({ top: 120, left: 200, right: 300, bottom: 160, width: 100, height: 40, x: 200, y: 120, toJSON: () => ({}) }) as DOMRect;
+    await user.click(gym);
+
+    const popover = screen.getByLabelText("event title").closest(".event-popover");
+    expect(popover).not.toBeNull();
+    // beside the block: top aligned with it, left just past its right edge
+    expect(popover).toHaveStyle({ top: "120px", left: "308px" });
+  });
+
+  it("keeps the new-event form below the grid, not in a popover", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "+ new event" }));
+
+    expect(screen.getByLabelText("event title").closest(".event-popover")).toBeNull();
+  });
+
   it("cancelling an edit writes nothing", async () => {
     const user = userEvent.setup();
     renderPage();

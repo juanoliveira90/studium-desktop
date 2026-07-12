@@ -752,6 +752,18 @@ button.plan-head:hover .name {
   opacity: 0.75;
 }
 
+/* edit form floats in a popover beside the clicked block */
+.event-popover {
+  position: fixed;
+  z-index: 10;
+  background: var(--bg-alt);
+  box-shadow: 0 2px 8px var(--overlay);
+}
+
+.event-popover .event-form {
+  margin-top: 0;
+}
+
 /* event add/edit form below the grid */
 .event-form {
   display: flex;
