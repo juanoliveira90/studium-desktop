@@ -3,36 +3,37 @@
  * Themes (built-in, pywal/base16, user CSS in vault/.studium/themes/)
  * override these variables and nothing else.
  *
- * Default theme: Solarized Dark (ethanschoonover.com/solarized).
+ * Default theme: Solarized Light (ethanschoonover.com/solarized).
  */
 :root {
   /* surfaces */
-  --bg: #002b36; /* base03 */
-  --bg-alt: #073642; /* base02 */
-  --bg-raised: #0e4a5a;
+  --bg: #fdf6e3; /* base3 */
+  --bg-alt: #eee8d5; /* base2 */
+  --bg-raised: #e3dcc5;
 
   /* text */
-  --fg: #93a1a1; /* base1 */
-  --fg-bright: #eee8d5; /* base2 */
-  --fg-dim: #657b83; /* base00 */
-  --fg-faint: #46606a;
+  --fg: #657b83; /* base00 */
+  --fg-bright: #073642; /* base02 */
+  --fg-dim: #93a1a1; /* base1 */
+  --fg-faint: #b8b09c;
 
   /* accent */
   --accent: #268bd2; /* blue */
-  --accent-dim: #1e6ba0;
-  --accent-bg: #0b3d52;
+  --accent-dim: #82b3d6;
+  --accent-bg: #d6e8f4;
 
   /* lines */
-  --overlay: rgb(0 16 21 / 0.6);
-  --border: #12444f;
+  --overlay: rgb(0 43 54 / 0.4);
+  --border: #d5cdb4;
   --border-focus: var(--accent);
 
-  /* semantic block colors (schedule, plan bullets) — darkened solarized
-     accents so they hold readable text as block backgrounds */
-  --block-1: #4a4e8f; /* violet */
-  --block-2: #1b6e68; /* cyan */
-  --block-3: #8f2a5c; /* magenta */
-  --block-4: #7a6000; /* yellow */
+  /* semantic block colors (schedule, plan bullets) — lightened solarized
+     accents so they hold readable dark text as block backgrounds while
+     staying visible as bullet colors on the light base */
+  --block-1: #9295d0; /* violet */
+  --block-2: #58b5aa; /* cyan */
+  --block-3: #dd7fae; /* magenta */
+  --block-4: #c9ad4d; /* yellow */
 
   /* status */
   --ok: #859900;

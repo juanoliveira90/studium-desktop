@@ -1,6 +1,6 @@
 # studium-desktop
 
-Local-first desktop version of Studium (github.com/juanoliveira90/studium): a study dashboard with a weekly schedule, study plans, and notes. No database — all data is plain markdown with YAML frontmatter in a user-chosen Obsidian-style vault. Tauri 2 shell (Rust owns all filesystem/vault I/O) with a React + TypeScript + Vite frontend. User-friendly monospace aesthetic: top navigation bar with page icons, sharp corners, Solarized Dark as the default theme, fully keyboard-driven, themable via CSS variables (pywal/base16 + user CSS).
+Local-first desktop version of Studium (github.com/juanoliveira90/studium): a study dashboard with a weekly schedule, study plans, and notes. No database — all data is plain markdown with YAML frontmatter in a user-chosen Obsidian-style vault. Tauri 2 shell (Rust owns all filesystem/vault I/O) with a React + TypeScript + Vite frontend. User-friendly monospace aesthetic: top navigation bar with centered page icons, sharp corners, Solarized Light as the default theme, fully keyboard-driven, themable via CSS variables (pywal/base16 + user CSS).
 
 Full architecture, vault format, and implementation roadmap: `docs/initialPlan.md`. Visual reference: `docs/ReferenceImage.md`.
 
