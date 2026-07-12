@@ -74,7 +74,7 @@ function renderPage() {
 }
 
 describe("HomePage", () => {
-  it("builds today's checklist from today's blocks and pending subtasks", async () => {
+  it("builds today's checklist from today's blocks and their plans' subtasks", async () => {
     renderPage();
 
     const list = await screen.findByRole("list", { name: "today" });
@@ -84,9 +84,10 @@ describe("HomePage", () => {
     expect(items[0]).toHaveTextContent("calculus ii");
     expect(items[0]).toHaveTextContent("1h 30m");
     expect(items[1]).toHaveTextContent("gym");
-    // then pending subtasks from the plans
+    // then pending subtasks of the plans linked from today's blocks
     expect(list).toHaveTextContent("partial fractions");
-    expect(list).toHaveTextContent("matrix factorizations (LU)");
+    // linear-algebra's block is Tuesday, so its tasks stay out
+    expect(list).not.toHaveTextContent("matrix factorizations (LU)");
     // done subtasks don't appear
     expect(list).not.toHaveTextContent("u-substitution drills");
   });
@@ -149,6 +150,8 @@ describe("HomePage", () => {
     expect(await screen.findByText("nothing scheduled")).toBeInTheDocument();
     const list = screen.getByRole("list", { name: "today" });
     expect(within(list).queryAllByText("calculus ii")).toEqual([]);
+    // no events → no plan is referenced today, so no subtasks either
+    expect(list).not.toHaveTextContent("partial fractions");
   });
 
   it("asks for a vault when none is remembered", async () => {

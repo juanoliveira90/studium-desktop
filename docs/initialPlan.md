@@ -64,7 +64,7 @@ Data-model implications from the reference:
 
 - **Notes carry tags** (frontmatter `tags:`) driving the filter tabs.
 - **Plans are undated and carry computed progress** — no start/end days in `plan.md` frontmatter; progress % computed from subject subtasks `done` ratio.
-- **"Today" checklist** on home aggregates today's schedule blocks + pending subtasks, with expected durations from block times.
+- **"Today" checklist** on home aggregates today's schedule blocks + the pending subtasks of the plans those blocks reference (a plan's tasks only appear on days with an event linked to it), with expected durations from block times.
 - **"Up next"** = next upcoming schedule block.
 
 ## Keyboard system

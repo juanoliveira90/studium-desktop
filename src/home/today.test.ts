@@ -57,18 +57,28 @@ describe("timeOf", () => {
 });
 
 describe("todayChecklist", () => {
-  it("lists today's blocks with durations, then every pending subtask", () => {
+  it("lists today's blocks, then pending subtasks of the plans they reference", () => {
     const items = todayChecklist(BLOCKS, PLANS, "mon", "13:00");
 
     expect(items[0]).toEqual({ label: "calculus ii", dur: "1h 30m", done: true });
     expect(items[1]).toEqual({ label: "gym", dur: "1h 30m", done: false });
+    // only calculus-ii is linked from a Monday block
     const rest = items.slice(2);
     expect(rest.map((i) => i.label)).toEqual([
       "partial fractions",
       "power series exercises",
-      "matrix factorizations (LU)",
     ]);
     expect(rest.every((i) => !i.done && i.dur === undefined)).toBe(true);
+  });
+
+  it("leaves out subtasks of plans not referenced by a today event", () => {
+    // linear-algebra's block is on Tuesday
+    const monday = todayChecklist(BLOCKS, PLANS, "mon", "13:00").map((i) => i.label);
+    expect(monday).not.toContain("matrix factorizations (LU)");
+
+    const tuesday = todayChecklist(BLOCKS, PLANS, "tue", "13:00").map((i) => i.label);
+    expect(tuesday).toContain("matrix factorizations (LU)");
+    expect(tuesday).not.toContain("partial fractions");
   });
 
   it("marks a block done only once its end time has passed", () => {
@@ -85,8 +95,8 @@ describe("todayChecklist", () => {
     expect(labels).not.toContain("u-substitution drills");
   });
 
-  it("is empty for a free day with no pending subtasks", () => {
-    expect(todayChecklist(BLOCKS, [], "sun", "13:00")).toEqual([]);
+  it("is empty for a free day, even with pending plans", () => {
+    expect(todayChecklist(BLOCKS, PLANS, "sun", "13:00")).toEqual([]);
   });
 });
 

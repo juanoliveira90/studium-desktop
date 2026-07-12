@@ -39,19 +39,26 @@ export interface ChecklistItem {
   done: boolean;
 }
 
-/** Today's blocks (done once they're over) plus every pending plan subtask. */
+/**
+ * Today's blocks (done once they're over) plus the pending subtasks of the
+ * plans those blocks reference — a plan's tasks only surface on days that
+ * have an event linked to it.
+ */
 export function todayChecklist(
   blocks: ScheduleBlock[],
   plans: Plan[],
   day: Weekday,
   now: string,
 ): ChecklistItem[] {
-  const todays = blocksForDay(day, blocks).map((b) => ({
+  const todaysBlocks = blocksForDay(day, blocks);
+  const todays = todaysBlocks.map((b) => ({
     label: b.title,
     dur: blockDuration(b),
     done: toMinutes(b.end) <= toMinutes(now),
   }));
+  const linkedSlugs = new Set(todaysBlocks.map((b) => b.plan));
   const pending = plans
+    .filter((p) => linkedSlugs.has(p.slug))
     .flatMap((p) => p.subjects)
     .flatMap((s) => s.subtasks)
     .filter((t) => !t.done)
