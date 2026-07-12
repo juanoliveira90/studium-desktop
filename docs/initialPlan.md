@@ -6,7 +6,7 @@ Studium (github.com/juanoliveira90/studium) is a web productivity app for studen
 
 - **Local-first, no database** — an Obsidian-style vault in a user-chosen directory
 - **The three core features**: weekly schedule, study plans (plans → subjects → subtasks), note taking
-- **Fast and lightweight**, 100% keyboard-usable, i3-like aesthetic, themable like Obsidian/Linux apps
+- **Fast and lightweight**, 100% keyboard-usable, user-friendly monospace aesthetic (top-bar navigation with icons, Solarized by default), themable like Obsidian/Linux apps
 
 Decisions made with the user:
 
@@ -20,14 +20,14 @@ Decisions made with the user:
 ## Tech stack
 
 - **Shell**: Tauri 2 (Rust). Rust side owns all filesystem access: vault I/O, frontmatter parsing (`gray_matter` or `serde_yaml` + manual split), file watching (`notify` crate), config.
-- **Frontend**: React + TypeScript + Vite (same stack as web — port domain types and component logic from `apps/web`, but a fresh minimal UI, not the web look). No heavy UI kit: hand-rolled CSS on design tokens. Monospace font, 1px sharp borders, no rounded chrome — i3 aesthetic by default.
+- **Frontend**: React + TypeScript + Vite (same stack as web — port domain types and component logic from `apps/web`, but a fresh minimal UI, not the web look). No heavy UI kit: hand-rolled CSS on design tokens. Monospace font, sharp corners, top-bar navigation with icons — Solarized theme by default.
 - **State**: TanStack Query against Tauri `invoke` commands (mirrors the web app's fetch layer, so porting is mechanical: `scheduleFetchs.ts` → `invoke("schedule_list")` etc.).
 - **Markdown rendering/editing**: CodeMirror 6 for the note editor (lightweight, keyboard-first, used by Obsidian itself) with live-preview styling; `markdown-it` or CM6 decorations for rendering.
 - **No backend, no auth, no i18n initially** (can port i18next later).
 
 ## Vault design
 
-User picks/creates a vault directory on first run via the native folder picker (remembered in `~/.config/studium/config.toml`, which also keeps the list of every vault opened so far). The status bar's `⚙ vault` button opens a settings modal to create new vaults, switch between known ones, forget one (files stay on disk), or delete its files entirely (marker-validated, double-confirmed). Vault layout:
+User picks/creates a vault directory on first run via the native folder picker (remembered in `~/.config/studium/config.toml`, which also keeps the list of every vault opened so far). The top bar's `⚙ vault` button opens a settings modal to create new vaults, switch between known ones, forget one (files stay on disk), or delete its files entirely (marker-validated, double-confirmed). Vault layout:
 
 ```
 vault/
@@ -57,8 +57,8 @@ The app is **page-per-feature** — one full-window page per section, switched e
 
 - **Pages**: **home** (`alt+1` — logo/tagline, "today" checklist with durations, "today's events" from the schedule, "up next" derived from the next upcoming block); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — `active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); **weekly routine** (`alt+4` — the recurring weekly routine from `schedule.md`: hour rows 08:00–22:00 on a half-hour grid, weekday columns, blocks colored by their linked plan; no week nav since the schedule is a repeating template, not dated weeks; `+ new event` form below the grid, click a block to edit it, right-click → delete with confirm).
 - **Page chrome**: each page has a lowercase title with its keybinding hinted in the corner (`notes (alt+2)`) — keybindings are discoverable from the UI itself.
-- **Status bar**: a slim i3bar-like strip docked at the bottom lists the pages with their keybindings and highlights the active one; items are clickable but keyboard is the primary path. (The strip at the top of the reference image remains the user's OS bar, not part of the app.)
-- **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, muted dark base with one accent color (purple in the reference — must derive entirely from the CSS variable theme layer so pywal retints everything).
+- **Top bar**: a navigation bar docked at the top lists the pages as icon + label buttons (keybindings shown in the hover tooltip) and highlights the active one with an accent underline; the `⚙ vault` settings button sits at its right edge. Items are clickable and `Alt+1..4` remains the fast path.
+- **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, Solarized Dark base with its blue accent by default (must derive entirely from the CSS variable theme layer so pywal retints everything).
 
 Data-model implications from the reference:
 
@@ -90,7 +90,7 @@ Data-model implications from the reference:
 
 ## Implementation roadmap
 
-1. **Scaffold**: `npm create tauri-app` (React-TS template) in `studium-desktop`; strip to minimal window (no decorations optional), set up CSS token layer + default i3-ish theme, and build the static page-per-feature shell (one page per section, `Alt+1..4` switching, status bar, page chrome with keybinding hints) per the UI design section.
+1. **Scaffold**: `npm create tauri-app` (React-TS template) in `studium-desktop`; strip to minimal window (no decorations optional), set up CSS token layer + default Solarized theme, and build the static page-per-feature shell (one page per section, `Alt+1..4` switching, top bar, page chrome with keybinding hints) per the UI design section.
 2. **Vault core (Rust)**: vault open/create, frontmatter parse/serialize round-trip, atomic writes, `notify` watcher, Tauri commands + events. This is the foundation — test it well (round-trip property tests on frontmatter preservation). Also add a `sample-vault/` fixture in the final vault format: it doubles as Rust test data and replaces the mock data in `src/data/mock.ts`.
 3. **Notes module**: file list + CodeMirror editor, fuzzy finder. Simplest domain, proves the vault layer.
 4. **Schedule module**: port the weekly grid logic from `apps/web/src/components/schedule/Schedule.tsx`, backed by `schedule.md`.

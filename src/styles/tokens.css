@@ -2,56 +2,58 @@
  * Theme API — every color, font and spacing value the UI uses.
  * Themes (built-in, pywal/base16, user CSS in vault/.studium/themes/)
  * override these variables and nothing else.
+ *
+ * Default theme: Solarized Dark (ethanschoonover.com/solarized).
  */
 :root {
   /* surfaces */
-  --bg: #0c0c11;
-  --bg-alt: #12121a;
-  --bg-raised: #1a1a26;
+  --bg: #002b36; /* base03 */
+  --bg-alt: #073642; /* base02 */
+  --bg-raised: #0e4a5a;
 
   /* text */
-  --fg: #b9bcca;
-  --fg-bright: #e2e4ee;
-  --fg-dim: #62667c;
-  --fg-faint: #3d4054;
+  --fg: #93a1a1; /* base1 */
+  --fg-bright: #eee8d5; /* base2 */
+  --fg-dim: #657b83; /* base00 */
+  --fg-faint: #46606a;
 
   /* accent */
-  --accent: #8f7bd8;
-  --accent-dim: #57499a;
-  --accent-bg: #241f3a;
+  --accent: #268bd2; /* blue */
+  --accent-dim: #1e6ba0;
+  --accent-bg: #0b3d52;
 
   /* lines */
-  --overlay: rgb(0 0 0 / 0.6);
-  --border: #222230;
+  --overlay: rgb(0 16 21 / 0.6);
+  --border: #12444f;
   --border-focus: var(--accent);
 
-  /* semantic block colors (schedule, plan bullets) */
-  --block-1: #4d4380;
-  --block-2: #6a3a4a;
-  --block-3: #2f5a52;
-  --block-4: #3a4a6a;
+  /* semantic block colors (schedule, plan bullets) — darkened solarized
+     accents so they hold readable text as block backgrounds */
+  --block-1: #4a4e8f; /* violet */
+  --block-2: #1b6e68; /* cyan */
+  --block-3: #8f2a5c; /* magenta */
+  --block-4: #7a6000; /* yellow */
 
   /* status */
-  --ok: #7fb98a;
-  --warn: #c9a86a;
-  --err: #c97a7a;
+  --ok: #859900;
+  --warn: #b58900;
+  --err: #dc322f;
 
   /* typography */
   --font-mono: "JetBrainsMono Nerd Font", "JetBrains Mono", "Fira Code",
     "Source Code Pro", monospace;
-  --fs: 13px;
-  --fs-sm: 11px;
-  --fs-lg: 15px;
-  --fs-hero: 34px;
+  --fs: 14px;
+  --fs-sm: 12px;
+  --fs-lg: 16px;
+  --fs-hero: 36px;
 
   /* spacing scale */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
+  --sp-1: 5px;
+  --sp-2: 10px;
+  --sp-3: 15px;
+  --sp-4: 20px;
+  --sp-5: 30px;
 
   /* chrome */
-  --pane-gap: 10px;
-  --bar-height: 26px;
+  --bar-height: 42px;
 }

@@ -1,6 +1,6 @@
 # studium-desktop
 
-Local-first desktop version of Studium (github.com/juanoliveira90/studium): a study dashboard with a weekly schedule, study plans, and notes. No database — all data is plain markdown with YAML frontmatter in a user-chosen Obsidian-style vault. Tauri 2 shell (Rust owns all filesystem/vault I/O) with a React + TypeScript + Vite frontend. i3-like aesthetic: monospace, 1px borders, sharp corners, fully keyboard-driven, themable via CSS variables (pywal/base16 + user CSS).
+Local-first desktop version of Studium (github.com/juanoliveira90/studium): a study dashboard with a weekly schedule, study plans, and notes. No database — all data is plain markdown with YAML frontmatter in a user-chosen Obsidian-style vault. Tauri 2 shell (Rust owns all filesystem/vault I/O) with a React + TypeScript + Vite frontend. User-friendly monospace aesthetic: top navigation bar with page icons, sharp corners, Solarized Dark as the default theme, fully keyboard-driven, themable via CSS variables (pywal/base16 + user CSS).
 
 Full architecture, vault format, and implementation roadmap: `docs/initialPlan.md`. Visual reference: `docs/ReferenceImage.md`.
 
@@ -9,13 +9,13 @@ Full architecture, vault format, and implementation roadmap: `docs/initialPlan.m
 ```
 src/                    React frontend
   main.tsx              entry; imports the style layers in order
-  App.tsx               page shell: active-page state + Alt+1..4 keymap + bottom status bar
+  App.tsx               page shell: active-page state + Alt+1..4 keymap + top navigation bar
   styles/tokens.css     theme API — every color/font/spacing as CSS vars; themes override only these
   styles/base.css       reset + global element styles
   styles/app.css        all layout/page styling
-  components/           shared chrome (Page, StatusBar) + ContextMenu (right-click delete menu) / useContextMenu
+  components/           shared chrome (Page, TopBar — page icons + vault-settings gear, icons.tsx SVG set) + ContextMenu (right-click delete menu) / useContextMenu
   keyboard/             keymap combo matching + useKeymap window listener (seed of the command registry)
-  vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the status bar)
+  vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the top bar)
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor + livePreview.ts (Obsidian-style live preview decorations; Ctrl+E / header button toggles live↔raw, persisted in localStorage)
   schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
   plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, status, progress) + usePlans query/mutation hooks

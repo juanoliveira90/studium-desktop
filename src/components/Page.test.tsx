@@ -1,8 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { Page } from "./Page";
-import { SettingsContext } from "./settingsContext";
 
 describe("Page", () => {
   it("renders the title as a heading", () => {
@@ -49,21 +47,5 @@ describe("Page", () => {
 
     const page = screen.getByRole("region", { name: "home" });
     expect(page).toHaveAttribute("tabindex", "0");
-  });
-
-  it("opens vault settings from the title-row button", async () => {
-    const user = userEvent.setup();
-    const openSettings = vi.fn();
-    render(
-      <SettingsContext.Provider value={openSettings}>
-        <Page title="home">
-          <p>body</p>
-        </Page>
-      </SettingsContext.Provider>,
-    );
-
-    await user.click(screen.getByRole("button", { name: "vault settings" }));
-
-    expect(openSettings).toHaveBeenCalled();
   });
 });
