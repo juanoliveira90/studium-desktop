@@ -8,7 +8,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { docDelete, docList, docRead, docWrite } from "../vault/ipc";
-import { todayISO } from "../notes/note";
 import {
   addSubtaskFrontmatter,
   newPlanDoc,
@@ -34,12 +33,12 @@ export function usePlans(enabled: boolean) {
   });
 }
 
-/** Creates plans/<slug>/plan.md starting today; resolves to its path. */
+/** Creates plans/<slug>/plan.md; resolves to its path. */
 export function useCreatePlan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (name: string) => {
-      const { path, frontmatter, body } = newPlanDoc(name, todayISO());
+      const { path, frontmatter, body } = newPlanDoc(name);
       await docWrite(path, frontmatter, body);
       return path;
     },

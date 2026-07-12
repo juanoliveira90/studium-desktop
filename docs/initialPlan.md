@@ -55,7 +55,7 @@ vault/
 
 The app is **page-per-feature** — one full-window page per section, switched entirely by keyboard (this supersedes the reference image's 2×2 tiled layout; the content of each page stays true to its pane in the reference):
 
-- **Pages**: **home** (`alt+1` — logo/tagline, "today" checklist with durations, "today's events" from the schedule, "up next" derived from the next upcoming block); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — `active/upcoming/archive` tabs, plans with date range, thin progress bar + percentage, `+ new plan`); **weekly routine** (`alt+4` — the recurring weekly routine from `schedule.md`: hour rows 08:00–22:00 on a half-hour grid, weekday columns, blocks colored by their linked plan; no week nav since the schedule is a repeating template, not dated weeks; `+ new event` form below the grid, click a block to edit it in a popover beside the block, right-click → delete with confirm).
+- **Pages**: **home** (`alt+1` — logo/tagline, "today" checklist with durations, "today's events" from the schedule, "up next" derived from the next upcoming block); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — plan list with thin progress bar + percentage, `+ new plan`); **weekly routine** (`alt+4` — the recurring weekly routine from `schedule.md`: hour rows 08:00–22:00 on a half-hour grid, weekday columns, blocks colored by their linked plan; no week nav since the schedule is a repeating template, not dated weeks; `+ new event` form below the grid, click a block to edit it in a popover beside the block, right-click → delete with confirm).
 - **Page chrome**: each page has a lowercase title with its keybinding hinted in the corner (`notes (alt+2)`) — keybindings are discoverable from the UI itself.
 - **Top bar**: a navigation bar docked at the top lists the pages as centered icon + label buttons (keybindings shown in the hover tooltip) and highlights the active one with an accent underline; the `⚙ vault` settings button sits pinned at its right edge. Items are clickable and `Alt+1..4` remains the fast path.
 - **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, Solarized Light base with a warm brown accent by default (must derive entirely from the CSS variable theme layer so pywal retints everything).
@@ -63,7 +63,7 @@ The app is **page-per-feature** — one full-window page per section, switched e
 Data-model implications from the reference:
 
 - **Notes carry tags** (frontmatter `tags:`) driving the filter tabs.
-- **Plans have a date range and computed progress** — `start`/`end` in `plan.md` frontmatter; progress % computed from subject subtasks `done` ratio.
+- **Plans are undated and carry computed progress** — no start/end days in `plan.md` frontmatter; progress % computed from subject subtasks `done` ratio.
 - **"Today" checklist** on home aggregates today's schedule blocks + pending subtasks, with expected durations from block times.
 - **"Up next"** = next upcoming schedule block.
 

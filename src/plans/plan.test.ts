@@ -5,7 +5,6 @@ import {
   newPlanDoc,
   newSubjectDoc,
   planProgress,
-  planStatus,
   plansFromDocs,
   removeSubtaskFrontmatter,
   toggleSubtaskFrontmatter,
@@ -26,8 +25,6 @@ const SAMPLE_DOCS: DocPayload[] = [
     "plans/calculus-ii/plan.md",
     {
       name: "Calculus II",
-      start: "2026-06-01",
-      end: "2026-07-20",
       schedule_block: "[[calculus-ii]]",
     },
     "Second-semester calculus.\n",
@@ -53,8 +50,6 @@ const SAMPLE_DOCS: DocPayload[] = [
     "plans/linear-algebra/plan.md",
     {
       name: "Linear Algebra",
-      start: "2026-07-01",
-      end: "2026-08-30",
       schedule_block: "[[linear-algebra]]",
     },
     "Matrices, vector spaces.\n",
@@ -77,8 +72,6 @@ describe("plansFromDocs", () => {
 
     const calc = plans[0];
     expect(calc.name).toBe("Calculus II");
-    expect(calc.start).toBe("2026-06-01");
-    expect(calc.end).toBe("2026-07-20");
     expect(calc.scheduleBlock).toBe("calculus-ii");
     expect(calc.subjects.map((s) => s.tag)).toEqual(["integrals", "series"]);
     expect(calc.subjects[0].subtasks).toEqual([
@@ -97,7 +90,6 @@ describe("plansFromDocs", () => {
     ]);
 
     expect(plans[0].name).toBe("bare");
-    expect(plans[0].start).toBeUndefined();
     expect(plans[0].scheduleBlock).toBeUndefined();
     expect(plans[0].subjects[0].tag).toBe("untagged");
     expect(plans[0].subjects[0].subtasks).toEqual([]);
@@ -200,31 +192,6 @@ describe("planProgress", () => {
   });
 });
 
-describe("planStatus", () => {
-  const today = "2026-07-07";
-
-  it("is active while today is inside the date range", () => {
-    expect(planStatus(plan({ start: "2026-06-01", end: "2026-07-20" }), today)).toBe("active");
-  });
-
-  it("is upcoming before the start date", () => {
-    expect(planStatus(plan({ start: "2026-08-01", end: "2026-09-01" }), today)).toBe("upcoming");
-  });
-
-  it("is archive after the end date", () => {
-    expect(planStatus(plan({ start: "2026-01-01", end: "2026-02-01" }), today)).toBe("archive");
-  });
-
-  it("treats boundary days as active", () => {
-    expect(planStatus(plan({ start: today, end: today }), today)).toBe("active");
-  });
-
-  it("is active when dates are missing", () => {
-    expect(planStatus(plan({}), today)).toBe("active");
-    expect(planStatus(plan({ start: "2026-06-01" }), today)).toBe("active");
-  });
-});
-
 describe("toggleSubtaskFrontmatter", () => {
   it("flips one subtask's done flag, preserving the rest of the frontmatter", () => {
     const subject: Subject = {
@@ -303,10 +270,10 @@ describe("removeSubtaskFrontmatter", () => {
 });
 
 describe("newPlanDoc", () => {
-  it("builds plans/<slug>/plan.md starting today", () => {
-    expect(newPlanDoc("Real Analysis I", "2026-07-07")).toEqual({
+  it("builds plans/<slug>/plan.md", () => {
+    expect(newPlanDoc("Real Analysis I")).toEqual({
       path: "plans/real-analysis-i/plan.md",
-      frontmatter: { name: "Real Analysis I", start: "2026-07-07" },
+      frontmatter: { name: "Real Analysis I" },
       body: "",
     });
   });

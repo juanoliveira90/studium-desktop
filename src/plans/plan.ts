@@ -34,19 +34,12 @@ export interface Plan {
   slug: string;
   /** Frontmatter `name`, else the slug. */
   name: string;
-  /** Quoted ISO dates, as in the vault format. */
-  start?: string;
-  end?: string;
   /** Slug of the linked schedule block (`schedule_block: "[[slug]]"`). */
   scheduleBlock?: string;
   subjects: Subject[];
   frontmatter: Record<string, unknown>;
   frontmatterError?: string;
 }
-
-export type PlanStatus = "active" | "upcoming" | "archive";
-
-export const PLAN_TABS: PlanStatus[] = ["active", "upcoming", "archive"];
 
 const asString = (v: unknown): string | undefined =>
   typeof v === "string" ? v : undefined;
@@ -116,8 +109,6 @@ export function plansFromDocs(docs: DocPayload[]): {
     if (isPlanFile) {
       const plan = planFor(segments[1]);
       plan.name = asString(doc.frontmatter["name"]) ?? plan.slug;
-      plan.start = asString(doc.frontmatter["start"]);
-      plan.end = asString(doc.frontmatter["end"]);
       plan.scheduleBlock = wikiSlug(doc.frontmatter["schedule_block"]);
       plan.frontmatter = doc.frontmatter;
       plan.frontmatterError = doc.frontmatter_error ?? undefined;
@@ -139,16 +130,6 @@ export function planProgress(plan: Plan): number {
   if (subtasks.length === 0) return 0;
   const doneCount = subtasks.filter((t) => t.done).length;
   return Math.round((doneCount / subtasks.length) * 100);
-}
-
-/**
- * Which tab a plan belongs to on `today` (ISO date; string compare works).
- * Plans without dates are running now until said otherwise: active.
- */
-export function planStatus(plan: Plan, today: string): PlanStatus {
-  if (plan.end !== undefined && plan.end < today) return "archive";
-  if (plan.start !== undefined && plan.start > today) return "upcoming";
-  return "active";
 }
 
 /** New frontmatter for a subject with one subtask's done flag flipped. */
@@ -173,11 +154,11 @@ export function removeSubtaskFrontmatter(
   return { ...subject.frontmatter, subtasks };
 }
 
-/** Path, frontmatter and body for a freshly created plan, starting today. */
-export function newPlanDoc(name: string, today: string) {
+/** Path, frontmatter and body for a freshly created plan. */
+export function newPlanDoc(name: string) {
   return {
     path: `plans/${slugify(name)}/plan.md`,
-    frontmatter: { name, start: today },
+    frontmatter: { name },
     body: "",
   };
 }

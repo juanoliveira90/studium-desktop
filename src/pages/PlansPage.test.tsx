@@ -18,8 +18,6 @@ const doc = (
 const SAMPLE_DOCS: DocPayload[] = [
   doc("plans/calculus-ii/plan.md", {
     name: "Calculus II",
-    start: "2026-06-01",
-    end: "2026-07-20",
     schedule_block: "[[calculus-ii]]",
   }),
   doc("plans/calculus-ii/subjects/integrals.md", {
@@ -41,8 +39,6 @@ const SAMPLE_DOCS: DocPayload[] = [
   }),
   doc("plans/linear-algebra/plan.md", {
     name: "Linear Algebra",
-    start: "2026-07-01",
-    end: "2026-08-30",
     schedule_block: "[[linear-algebra]]",
   }),
   doc("plans/linear-algebra/subjects/matrices.md", {
@@ -70,8 +66,6 @@ function mockDocs(docs: DocPayload[]) {
 }
 
 beforeEach(() => {
-  // the page derives today from the clock; pin it inside the sample ranges
-  vi.useFakeTimers({ now: new Date(2026, 6, 7), shouldAdvanceTime: true });
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.scheduleList).mockResolvedValue(SCHEDULE);
@@ -82,7 +76,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.clearAllMocks();
 });
 
@@ -98,13 +91,11 @@ function renderPage() {
 }
 
 describe("PlansPage", () => {
-  it("lists the vault's plans with their formatted date ranges", async () => {
+  it("lists the vault's plans", async () => {
     renderPage();
 
     expect(await screen.findByText("Calculus II")).toBeInTheDocument();
-    expect(screen.getByText("Jun 1 — Jul 20")).toBeInTheDocument();
     expect(screen.getByText("Linear Algebra")).toBeInTheDocument();
-    expect(screen.getByText("Jul 1 — Aug 30")).toBeInTheDocument();
   });
 
   it("computes progress from the plans' subject subtasks", async () => {
@@ -126,37 +117,6 @@ describe("PlansPage", () => {
     expect(linalgDot).toHaveStyle({ color: "var(--block-2)" });
   });
 
-  it("files plans under active/upcoming/archive tabs by their date range", async () => {
-    mockDocs([
-      ...SAMPLE_DOCS,
-      doc("plans/last-term/plan.md", {
-        name: "Last Term",
-        start: "2026-01-01",
-        end: "2026-02-01",
-      }),
-      doc("plans/next-term/plan.md", {
-        name: "Next Term",
-        start: "2026-08-01",
-        end: "2026-09-01",
-      }),
-    ]);
-    const user = userEvent.setup();
-    renderPage();
-
-    // today is 2026-07-07: sample plans are active, the others are not
-    expect(await screen.findByText("Calculus II")).toBeInTheDocument();
-    expect(screen.queryByText("Last Term")).not.toBeInTheDocument();
-    expect(screen.queryByText("Next Term")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: "upcoming" }));
-    expect(screen.getByText("Next Term")).toBeInTheDocument();
-    expect(screen.queryByText("Calculus II")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: "archive" }));
-    expect(screen.getByText("Last Term")).toBeInTheDocument();
-    expect(screen.queryByText("Next Term")).not.toBeInTheDocument();
-  });
-
   it("creates plans/<slug>/plan.md when a new plan is named", async () => {
     const user = userEvent.setup();
     renderPage();
@@ -166,7 +126,7 @@ describe("PlansPage", () => {
 
     expect(ipc.docWrite).toHaveBeenCalledWith(
       "plans/real-analysis-i/plan.md",
-      { name: "Real Analysis I", start: "2026-07-07" },
+      { name: "Real Analysis I" },
       "",
     );
   });
@@ -337,7 +297,7 @@ describe("PlansPage", () => {
     ]);
     renderPage();
 
-    // name falls back to the slug; dates missing → filed under active
+    // name falls back to the slug
     expect(await screen.findByText("broken")).toBeInTheDocument();
     expect(screen.getByTitle("bad YAML on line 2")).toBeInTheDocument();
   });

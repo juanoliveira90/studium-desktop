@@ -18,7 +18,7 @@ src/                    React frontend
   vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the top bar)
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor + livePreview.ts (Obsidian-style live preview decorations; Ctrl+E / header button toggles live↔raw, persisted in localStorage)
   schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
-  plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, status, progress) + usePlans query/mutation hooks
+  plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, progress) + usePlans query/mutation hooks
   home/                 home module: today.ts — pure aggregation over schedule + plans data (today checklist, up next, clock helpers)
   data/                 format.ts — shared date display formatting for the vault's ISO dates
   pages/                one page per feature (Home, Notes, Plans, Schedule) + pages.ts registry

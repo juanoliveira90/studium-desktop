@@ -2,14 +2,9 @@ import { useEffect, useState } from "react";
 import { Page } from "../components/Page";
 import { type ContextMenuItem } from "../components/ContextMenu";
 import { useContextMenu } from "../components/useContextMenu";
-import { formatDateRange, formatShortDate } from "../data/format";
-import { todayISO } from "../notes/note";
 import {
-  PLAN_TABS,
   planProgress,
-  planStatus,
   type Plan,
-  type PlanStatus,
   type Subject,
 } from "../plans/plan";
 import {
@@ -71,14 +66,6 @@ export function PlansPage() {
   );
 }
 
-function rangeLabel(plan: Plan): string {
-  if (plan.start !== undefined && plan.end !== undefined) {
-    return formatDateRange(plan.start, plan.end);
-  }
-  if (plan.start !== undefined) return `${formatShortDate(plan.start)} —`;
-  return "";
-}
-
 /**
  * The "+ new <thing>" row used at every level (plan, subject, task): a button
  * that swaps to a text input. Enter hands the trimmed name to onSubmit along
@@ -132,7 +119,7 @@ function AddRow({
   );
 }
 
-/** Status tabs + plan rows with progress; the reference-image half of the page. */
+/** Plan rows with progress; the reference-image half of the page. */
 function PlanList({
   plans,
   errors,
@@ -144,31 +131,14 @@ function PlanList({
   colors: Map<string, number>;
   onOpen: (slug: string) => void;
 }) {
-  const [tab, setTab] = useState<PlanStatus>("active");
   const createPlan = useCreatePlan();
   const deletePlan = useDeletePlan();
   const { menu, open: openMenu } = useContextMenu();
 
-  const today = todayISO();
-  const shown = plans.filter((p) => planStatus(p, today) === tab);
-
   return (
     <>
-      <div className="tabs" role="tablist">
-        {PLAN_TABS.map((t) => (
-          <button
-            key={t}
-            role="tab"
-            aria-selected={t === tab}
-            className={`tab${t === tab ? " is-active" : ""}`}
-            onClick={() => setTab(t)}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
       <ul className="plan-list">
-        {shown.map((p) => {
+        {plans.map((p) => {
           const pct = planProgress(p);
           const color = colors.get(p.slug);
           return (
@@ -199,7 +169,6 @@ function PlanList({
                   </span>
                 )}
               </button>
-              <div className="plan-range">{rangeLabel(p)}</div>
               <div className="plan-progress">
                 <div className="track">
                   <div className="fill" style={{ width: `${pct}%` }} />
@@ -210,7 +179,7 @@ function PlanList({
           );
         })}
       </ul>
-      {shown.length === 0 && <p className="muted">no {tab} plans</p>}
+      {plans.length === 0 && <p className="muted">no plans yet</p>}
       <AddRow
         label="+ new plan"
         placeholder="plan name..."
@@ -275,7 +244,6 @@ function PlanDetail({
         )}
         <span className="hint">esc to close</span>
       </div>
-      <div className="plan-range">{rangeLabel(plan)}</div>
       {plan.subjects.map((s) => (
         <SubjectChecklist
           key={s.path}

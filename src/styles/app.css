@@ -638,12 +638,6 @@ button.plan-head:hover .name {
   color: var(--fg-bright);
 }
 
-.plan-range {
-  color: var(--fg-dim);
-  padding-left: calc(9px + var(--sp-2));
-  margin-bottom: var(--sp-1);
-}
-
 .plan-progress {
   display: flex;
   align-items: center;
