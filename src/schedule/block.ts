@@ -171,6 +171,18 @@ export function gridPlacement(
   return { row, span: Math.max(lastRow - row, 1) };
 }
 
+/**
+ * Where the schedule's scroll should sit after a scroll event. The page
+ * stacks three identical 24h copies of the grid; keeping the position inside
+ * the middle copy — jumping one cycle back toward it when it drifts into the
+ * first or last — makes the scroll wrap around the routine forever.
+ */
+export function wrappedScrollTop(scrollTop: number, cycleHeight: number): number {
+  if (scrollTop < cycleHeight * 0.5) return scrollTop + cycleHeight;
+  if (scrollTop > cycleHeight * 1.5) return scrollTop - cycleHeight;
+  return scrollTop;
+}
+
 /** How many --block-N color tokens the theme defines. */
 const PALETTE_SIZE = 4;
 

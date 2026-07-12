@@ -10,6 +10,7 @@ import {
   planColorBySlug,
   toMinutes,
   WEEKDAYS,
+  wrappedScrollTop,
   type EventFields,
   type ScheduleBlock,
   type Weekday,
@@ -23,10 +24,14 @@ import {
 import { useVault } from "../vault/useVault";
 import { VaultGate } from "../vault/VaultGate";
 
-const START_HOUR = 8;
-const END_HOUR = 22;
-const HOURS = END_HOUR - START_HOUR;
-const ROWS = HOURS * 2; // half-hour resolution, schedule times are "HH:MM"
+// The grid covers the full day in half-hour rows ("HH:MM" times), stacked
+// COPIES times inside a scroll viewport. The scroll position lives in the
+// middle copy and wraps (see wrappedScrollTop), so scrolling circles the
+// 24h routine forever. The viewport opens at OPEN_HOUR.
+const HOURS = 24;
+const CYCLE_ROWS = HOURS * 2;
+const COPIES = 3;
+const OPEN_HOUR = 8;
 
 export function SchedulePage() {
   const vault = useVault();
@@ -275,7 +280,8 @@ function EventForm({
   );
 }
 
-/** The recurring weekly routine on an hour-row × weekday-column grid. */
+/** The recurring weekly routine on an hour-row × weekday-column grid, inside
+ *  a scroll viewport that wraps around the 24h cycle endlessly. */
 function WeekGrid({
   blocks,
   onBlockClick,
@@ -286,9 +292,35 @@ function WeekGrid({
   onBlockContextMenu: (e: React.MouseEvent, block: ScheduleBlock) => void;
 }) {
   const planColors = planColorBySlug(blocks);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+
+  // one 24h copy in scroll pixels; the sticky header row is not part of a copy
+  const cycleHeight = () => {
+    const scroller = scrollRef.current;
+    if (!scroller) return 0;
+    const headHeight = headRef.current?.offsetHeight ?? 0;
+    return (scroller.scrollHeight - headHeight) / COPIES;
+  };
+
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    // open on the middle copy, scrolled to OPEN_HOUR
+    scroller.scrollTop = cycleHeight() * (1 + OPEN_HOUR / HOURS);
+  }, []);
+
+  const onScroll = () => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const cycle = cycleHeight();
+    if (cycle <= 0) return;
+    const wrapped = wrappedScrollTop(scroller.scrollTop, cycle);
+    if (wrapped !== scroller.scrollTop) scroller.scrollTop = wrapped;
+  };
 
   const cells = [];
-  for (let row = 0; row < ROWS; row++) {
+  for (let row = 0; row < CYCLE_ROWS * COPIES; row++) {
     for (let day = 0; day < 7; day++) {
       cells.push(
         <div
@@ -301,53 +333,57 @@ function WeekGrid({
   }
 
   return (
-    <div className="week-grid">
-      <div style={{ gridColumn: 1, gridRow: 1 }} />
-      {WEEKDAYS.map((d, i) => (
-        <div key={d} className="day-head" style={{ gridColumn: i + 2, gridRow: 1 }}>
-          {d}
-        </div>
-      ))}
-      {Array.from({ length: HOURS / 2 + 1 }, (_, i) => {
-        const hour = START_HOUR + i * 2;
-        return (
-          <div
-            key={hour}
-            className="hour-label"
-            style={{ gridRow: i * 4 + 2 }}
-          >
-            {String(hour).padStart(2, "0")}:00
+    <div ref={scrollRef} className="week-scroll" onScroll={onScroll}>
+      <div className="week-grid">
+        <div ref={headRef} className="day-head" style={{ gridColumn: 1, gridRow: 1 }} />
+        {WEEKDAYS.map((d, i) => (
+          <div key={d} className="day-head" style={{ gridColumn: i + 2, gridRow: 1 }}>
+            {d}
           </div>
-        );
-      })}
-      {cells}
-      {WEEKDAYS.flatMap((day, col) =>
-        blocksForDay(day, blocks).map((b) => {
-          const placed = gridPlacement(b, START_HOUR, END_HOUR);
-          if (!placed) return null;
-          const color = b.plan ? planColors.get(b.plan) : undefined;
+        ))}
+        {Array.from({ length: COPIES * HOURS / 2 }, (_, i) => {
+          const hour = (i * 2) % HOURS;
           return (
             <div
-              key={b.index}
-              className="week-block"
-              onClick={(e) => onBlockClick(b, e)}
-              onContextMenu={(e) => onBlockContextMenu(e, b)}
-              style={{
-                gridColumn: col + 2,
-                // +2: grid lines are 1-based and row 1 is the day header
-                gridRow: `${placed.row + 2} / span ${placed.span}`,
-                ...(color && {
-                  background: `var(--block-${color})`,
-                  borderColor: "transparent",
-                }),
-              }}
+              key={i}
+              className="hour-label"
+              style={{ gridRow: i * 4 + 2 }}
             >
-              {b.title}
-              {b.description && <span className="week-block-desc">{b.description}</span>}
+              {String(hour).padStart(2, "0")}:00
             </div>
           );
-        }),
-      )}
+        })}
+        {cells}
+        {Array.from({ length: COPIES }, (_, copy) =>
+          WEEKDAYS.flatMap((day, col) =>
+            blocksForDay(day, blocks).map((b) => {
+              const placed = gridPlacement(b, 0, HOURS);
+              if (!placed) return null;
+              const color = b.plan ? planColors.get(b.plan) : undefined;
+              return (
+                <div
+                  key={`${copy}-${b.index}`}
+                  className="week-block"
+                  onClick={(e) => onBlockClick(b, e)}
+                  onContextMenu={(e) => onBlockContextMenu(e, b)}
+                  style={{
+                    gridColumn: col + 2,
+                    // +2: grid lines are 1-based and row 1 is the day header
+                    gridRow: `${copy * CYCLE_ROWS + placed.row + 2} / span ${placed.span}`,
+                    ...(color && {
+                      background: `var(--block-${color})`,
+                      borderColor: "transparent",
+                    }),
+                  }}
+                >
+                  {b.title}
+                  {b.description && <span className="week-block-desc">{b.description}</span>}
+                </div>
+              );
+            }),
+          ),
+        )}
+      </div>
     </div>
   );
 }

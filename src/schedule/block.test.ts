@@ -8,6 +8,7 @@ import {
   isValidTime,
   planColorBySlug,
   scheduleFromEntries,
+  wrappedScrollTop,
   type ScheduleBlock,
 } from "./block";
 import type { ScheduleEntry } from "../vault/ipc";
@@ -142,6 +143,23 @@ describe("gridPlacement", () => {
 
   it("rounds off-grid times outward and keeps at least one row", () => {
     expect(gridPlacement(block({ start: "09:40", end: "09:55" }), 8, 22)).toEqual({ row: 3, span: 1 });
+  });
+});
+
+describe("wrappedScrollTop", () => {
+  // the page stacks three 24h copies; the scroll position lives in the
+  // middle one, jumping a cycle whenever it drifts into the first or last
+  // copy so scrolling wraps around the routine forever
+  it("keeps a position inside the middle copy unchanged", () => {
+    expect(wrappedScrollTop(1000, 1000)).toBe(1000);
+  });
+
+  it("jumps a cycle down when scrolled up into the first copy", () => {
+    expect(wrappedScrollTop(400, 1000)).toBe(1400);
+  });
+
+  it("jumps a cycle up when scrolled down into the last copy", () => {
+    expect(wrappedScrollTop(1600, 1000)).toBe(600);
   });
 });
 

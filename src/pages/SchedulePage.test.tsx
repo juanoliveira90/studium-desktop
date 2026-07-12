@@ -52,28 +52,48 @@ describe("SchedulePage", () => {
     }
   });
 
-  it("renders hour labels every two hours from 08:00 to 22:00", async () => {
+  it("renders the full 24h of hour labels, once per wrap-around copy", async () => {
     renderPage();
 
-    for (const hour of ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"]) {
-      expect(await screen.findByText(hour)).toBeInTheDocument();
+    // the 24h cycle is stacked three times so the scroll can wrap around
+    expect(await screen.findAllByText("00:00")).toHaveLength(3);
+    for (const hour of ["02:00", "04:00", "06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"]) {
+      expect(screen.getAllByText(hour)).toHaveLength(3);
     }
     expect(screen.queryByText("09:00")).not.toBeInTheDocument();
   });
 
-  it("places the vault's blocks on a half-hour grid from their frontmatter times", async () => {
+  it("places the vault's blocks on a half-hour grid, once per wrap-around copy", async () => {
     renderPage();
 
-    // "sicp reading" runs thu 14:00–16:00: rows are half-hours offset from
-    // 08:00 plus one header row → row (14-8)*2+2 = 14, span 4 half-hours.
-    const sicp = await screen.findByText("sicp reading");
-    expect(sicp).toHaveStyle({ gridRow: "14 / span 4" });
-    expect(sicp).toHaveStyle({ gridColumn: "5" });
+    // "sicp reading" runs thu 14:00–16:00: rows are half-hours from midnight
+    // plus one header row → row 14*2+2 = 30 in the first copy, span 4; each
+    // further copy sits one 24h cycle (48 rows) down.
+    const sicp = await screen.findAllByText("sicp reading");
+    expect(sicp.map((el) => el.style.gridRow)).toEqual([
+      "30 / span 4",
+      "78 / span 4",
+      "126 / span 4",
+    ]);
+    expect(sicp[0]).toHaveStyle({ gridColumn: "5" });
 
-    // "gym" runs mon 17:00–18:30 → row (17-8)*2+2 = 20, span 3.
-    const gym = screen.getByText("gym");
-    expect(gym).toHaveStyle({ gridRow: "20 / span 3" });
-    expect(gym).toHaveStyle({ gridColumn: "2" });
+    // "gym" runs mon 17:00–18:30 → row 17*2+2 = 36, span 3.
+    const gym = screen.getAllByText("gym");
+    expect(gym.map((el) => el.style.gridRow)).toEqual([
+      "36 / span 3",
+      "84 / span 3",
+      "132 / span 3",
+    ]);
+    expect(gym[0]).toHaveStyle({ gridColumn: "2" });
+  });
+
+  it("puts the grid in a scroll viewport so the whole 24h range is reachable", async () => {
+    renderPage();
+    await screen.findByText("mon");
+
+    const scroller = document.querySelector(".week-scroll");
+    expect(scroller).not.toBeNull();
+    expect(scroller!.querySelector(".week-grid")).not.toBeNull();
   });
 
   it("colors blocks by their linked plan and leaves unlinked blocks default", async () => {
@@ -83,7 +103,7 @@ describe("SchedulePage", () => {
     expect(calc).toHaveStyle({ background: "var(--block-1)" });
     const linalg = screen.getAllByText("linear algebra")[0];
     expect(linalg).toHaveStyle({ background: "var(--block-2)" });
-    expect(screen.getByText("gym").getAttribute("style")).not.toContain("background");
+    expect(screen.getAllByText("gym")[0].getAttribute("style")).not.toContain("background");
   });
 
   it("labels the schedule as the weekly routine, with no week navigation", async () => {
@@ -102,7 +122,7 @@ describe("SchedulePage", () => {
     ]);
     renderPage();
 
-    expect(await screen.findByText("gym")).toBeInTheDocument();
+    expect((await screen.findAllByText("gym")).length).toBeGreaterThan(0);
     expect(screen.queryByText("limbo")).not.toBeInTheDocument();
     const warning = screen.getByText(/2 schedule blocks in schedule.md couldn't be read/);
     expect(warning).toHaveTextContent("block 7: bad YAML on line 2");
@@ -189,7 +209,7 @@ describe("SchedulePage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByText("gym"));
+    await user.click((await screen.findAllByText("gym"))[0]);
     const title = screen.getByLabelText("event title");
     expect(title).toHaveValue("gym");
     await user.clear(title);
@@ -209,7 +229,7 @@ describe("SchedulePage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const gym = await screen.findByText("gym");
+    const gym = (await screen.findAllByText("gym"))[0];
     gym.getBoundingClientRect = () =>
       ({ top: 120, left: 200, right: 300, bottom: 160, width: 100, height: 40, x: 200, y: 120, toJSON: () => ({}) }) as DOMRect;
     await user.click(gym);
@@ -233,7 +253,7 @@ describe("SchedulePage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByText("gym"));
+    await user.click((await screen.findAllByText("gym"))[0]);
     await user.click(screen.getByRole("button", { name: "cancel" }));
 
     expect(screen.queryByLabelText("event title")).not.toBeInTheDocument();
@@ -244,7 +264,7 @@ describe("SchedulePage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const gym = await screen.findByText("gym");
+    const gym = (await screen.findAllByText("gym"))[0];
     await user.pointer({ keys: "[MouseRight]", target: gym });
     await user.click(screen.getByRole("menuitem", { name: "delete event" }));
     expect(ipc.scheduleDelete).not.toHaveBeenCalled(); // armed, not fired
@@ -259,8 +279,8 @@ describe("SchedulePage", () => {
     ]);
     renderPage();
 
-    expect(await screen.findByText("deep work")).toBeInTheDocument();
-    expect(screen.getByText("thesis draft")).toBeInTheDocument();
+    expect(await screen.findAllByText("deep work")).toHaveLength(3);
+    expect(screen.getAllByText("thesis draft")).toHaveLength(3);
   });
 
   it("asks for a vault when none is remembered", async () => {
