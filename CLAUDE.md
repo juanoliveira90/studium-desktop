@@ -8,7 +8,7 @@ Full architecture, vault format, and implementation roadmap: `docs/initialPlan.m
 
 ```
 src/                    React frontend
-  main.tsx              entry; imports the style layers in order
+  main.tsx              entry; imports bundled JetBrains Mono (@fontsource) + the style layers in order
   App.tsx               page shell: active-page state + Alt+1..4 keymap + top navigation bar
   styles/tokens.css     theme API — every color/font/spacing as CSS vars; themes override only these
   styles/base.css       reset + global element styles

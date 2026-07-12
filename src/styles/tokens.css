@@ -40,13 +40,13 @@
   --warn: #b58900;
   --err: #dc322f;
 
-  /* typography */
-  --font-mono: "JetBrainsMono Nerd Font", "JetBrains Mono", "Fira Code",
+  /* typography — JetBrains Mono is bundled (imported in main.tsx) */
+  --font-mono: "JetBrains Mono", "JetBrainsMono Nerd Font", "Fira Code",
     "Source Code Pro", monospace;
-  --fs: 14px;
-  --fs-sm: 12px;
-  --fs-lg: 16px;
-  --fs-hero: 36px;
+  --fs: 15px;
+  --fs-sm: 13px;
+  --fs-lg: 17px;
+  --fs-hero: 38px;
 
   /* spacing scale */
   --sp-1: 5px;
