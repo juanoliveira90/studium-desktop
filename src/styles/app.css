@@ -317,26 +317,27 @@
   list-style: none;
 }
 
-.today-list li {
+.today-list .subject-line {
+  color: var(--fg);
+  padding: 3px 0;
+}
+
+.today-tasks {
+  list-style: none;
+  padding-left: var(--sp-4);
+}
+
+.today-tasks li {
   display: flex;
   gap: var(--sp-2);
   padding: 3px 0;
 }
 
-.today-list .box {
+.today-tasks .box {
   color: var(--accent);
 }
 
-.today-list li.is-done .box {
-  color: var(--accent);
-}
-
-.today-list li.is-done .label {
-  color: var(--fg-dim);
-}
-
-.today-list .dur {
-  margin-left: auto;
+.today-tasks li.is-done .label {
   color: var(--fg-dim);
 }
 

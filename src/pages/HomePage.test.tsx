@@ -74,31 +74,32 @@ function renderPage() {
 }
 
 describe("HomePage", () => {
-  it("builds today's checklist from today's blocks and their plans' subtasks", async () => {
+  it("groups today under the linked plans' subjects with their tasks", async () => {
     renderPage();
 
     const list = await screen.findByRole("list", { name: "today" });
-    const items = within(list).getAllByRole("listitem");
 
-    // Monday's two schedule blocks come first, with durations
-    expect(items[0]).toHaveTextContent("calculus ii");
-    expect(items[0]).toHaveTextContent("1h 30m");
-    expect(items[1]).toHaveTextContent("gym");
-    // then pending subtasks of the plans linked from today's blocks
+    // calculus-ii is linked from a Monday block → its subject heads the list
+    expect(list).toHaveTextContent("- integrals");
+    expect(list).toHaveTextContent("u-substitution drills");
     expect(list).toHaveTextContent("partial fractions");
-    // linear-algebra's block is Tuesday, so its tasks stay out
-    expect(list).not.toHaveTextContent("matrix factorizations (LU)");
-    // done subtasks don't appear
-    expect(list).not.toHaveTextContent("u-substitution drills");
+    // the routine's blocks live in "today's events", not here
+    expect(list).not.toHaveTextContent("calculus ii");
+    expect(list).not.toHaveTextContent("gym");
+    // linear-algebra's block is Tuesday, so its subject stays out
+    expect(list).not.toHaveTextContent("matrices");
   });
 
-  it("marks blocks that are already over as done", async () => {
+  it("checks off done tasks and leaves pending ones open", async () => {
     renderPage();
 
-    // now is 13:00: calculus ii (ended 11:00) done, gym (17:00) pending
-    const calc = (await screen.findAllByText("calculus ii"))[0];
-    expect(calc.closest("li")).toHaveClass("is-done");
-    expect(screen.getAllByText("gym")[0].closest("li")).not.toHaveClass("is-done");
+    const list = await screen.findByRole("list", { name: "today" });
+    const done = within(list).getByText("u-substitution drills").closest("li")!;
+    expect(done).toHaveClass("is-done");
+    expect(done).toHaveTextContent("☑");
+    const pending = within(list).getByText("partial fractions").closest("li")!;
+    expect(pending).not.toHaveClass("is-done");
+    expect(pending).toHaveTextContent("☐");
   });
 
   it("renders today's schedule events with their times", async () => {
@@ -148,9 +149,9 @@ describe("HomePage", () => {
     renderPage();
 
     expect(await screen.findByText("nothing scheduled")).toBeInTheDocument();
+    // no events → no plan is referenced today, so no subjects or tasks
     const list = screen.getByRole("list", { name: "today" });
-    expect(within(list).queryAllByText("calculus ii")).toEqual([]);
-    // no events → no plan is referenced today, so no subtasks either
+    expect(list).not.toHaveTextContent("integrals");
     expect(list).not.toHaveTextContent("partial fractions");
   });
 

@@ -1,19 +1,18 @@
 /*
  * Home-page domain model: pure aggregation over the schedule and plans
- * modules' data — the "today" checklist, and the next upcoming block — as of
+ * modules' data — the "today" subjects, and the next upcoming block — as of
  * a given weekday and clock time. No I/O here; HomePage feeds these from
  * useSchedule/usePlans and the real clock.
  */
 
 import {
-  blockDuration,
   blocksForDay,
   toMinutes,
   type ScheduleBlock,
   type Weekday,
   WEEKDAYS,
 } from "../schedule/block";
-import type { Plan } from "../plans/plan";
+import type { Plan, Subtask } from "../plans/plan";
 
 /** Date.getDay() is 0 = Sunday; the vault week starts on Monday. */
 const JS_DAY_TO_WEEKDAY: Weekday[] = [
@@ -32,38 +31,28 @@ export function timeOf(now: Date): string {
   return `${h}:${m}`;
 }
 
-export interface ChecklistItem {
-  label: string;
-  /** Human duration, only for schedule blocks. */
-  dur?: string;
-  done: boolean;
+export interface TodaySubject {
+  /** Subject file path — a stable render key. */
+  path: string;
+  subject: string;
+  tasks: Subtask[];
 }
 
 /**
- * Today's blocks (done once they're over) plus the pending subtasks of the
- * plans those blocks reference — a plan's tasks only surface on days that
- * have an event linked to it.
+ * The subjects (with their tasks) of every plan referenced by one of today's
+ * schedule blocks: weekly routine → study plan → subjects + tasks. The blocks
+ * themselves belong to "today's events", not this list.
  */
-export function todayChecklist(
+export function todaySubjects(
   blocks: ScheduleBlock[],
   plans: Plan[],
   day: Weekday,
-  now: string,
-): ChecklistItem[] {
-  const todaysBlocks = blocksForDay(day, blocks);
-  const todays = todaysBlocks.map((b) => ({
-    label: b.title,
-    dur: blockDuration(b),
-    done: toMinutes(b.end) <= toMinutes(now),
-  }));
-  const linkedSlugs = new Set(todaysBlocks.map((b) => b.plan));
-  const pending = plans
+): TodaySubject[] {
+  const linkedSlugs = new Set(blocksForDay(day, blocks).map((b) => b.plan));
+  return plans
     .filter((p) => linkedSlugs.has(p.slug))
     .flatMap((p) => p.subjects)
-    .flatMap((s) => s.subtasks)
-    .filter((t) => !t.done)
-    .map((t) => ({ label: t.name, done: false }));
-  return [...todays, ...pending];
+    .map((s) => ({ path: s.path, subject: s.tag, tasks: s.subtasks }));
 }
 
 /** The first of today's blocks still ahead of now, if any. */
