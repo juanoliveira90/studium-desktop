@@ -8,9 +8,10 @@ BIN_DIR="$HOME/.local/bin"
 ICON_DIR="$HOME/.local/share/icons/hicolor/1024x1024/apps"
 DESKTOP_DIR="$HOME/.local/share/applications"
 
-# 1. Build the release binary
+# 1. Build the release binary (--no-bundle: we install the raw binary,
+#    and the AppImage/deb bundlers need extra system deps like fuse2)
 npm install
-npm run tauri build
+npm run tauri build -- --no-bundle
 
 # Tauri names the binary after productName; fall back to the crate name
 release_dir="src-tauri/target/release"
