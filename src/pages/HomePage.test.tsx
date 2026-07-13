@@ -103,6 +103,25 @@ describe("HomePage", () => {
     expect(pending).toHaveTextContent("☐");
   });
 
+  it("minimizes a subject's tasks when its line is clicked", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const list = await screen.findByRole("list", { name: "today" });
+    const heading = within(list).getByRole("button", { name: /integrals/, expanded: true });
+
+    await user.click(heading);
+    expect(heading).toHaveAttribute("aria-expanded", "false");
+    expect(
+      within(list).queryByRole("button", { name: /u-substitution drills/ }),
+    ).not.toBeInTheDocument();
+
+    await user.click(heading);
+    expect(
+      within(list).getByRole("button", { name: /u-substitution drills/ }),
+    ).toBeInTheDocument();
+  });
+
   it("writes the flipped done flag back to the subject file on click", async () => {
     const user = userEvent.setup();
     renderPage();

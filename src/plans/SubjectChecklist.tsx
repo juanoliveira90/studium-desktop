@@ -1,11 +1,12 @@
 /*
  * One subject's task checklist, shared by the plans detail and the home page:
- * clicking a task toggles its done flag, right-clicking a task or the subject
+ * clicking a task toggles its done flag, clicking the subject heading
+ * minimizes/expands the checklist, right-clicking a task or the subject
  * heading opens a confirm-to-delete context menu. Mutations write straight
  * back to the subject file through the usePlans hooks.
  */
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { AddRow } from "../components/AddRow";
 import { type ContextMenuItem } from "../components/ContextMenu";
 import type { Subject } from "./plan";
@@ -34,11 +35,15 @@ export function SubjectChecklist({
   const addSubtask = useAddSubtask();
   const deleteSubject = useDeleteSubject();
   const deleteSubtask = useDeleteSubtask();
+  const [minimized, setMinimized] = useState(false);
 
   return (
     <div className="subject">
-      <div
-        className={headingClassName}
+      <button
+        type="button"
+        className={`subject-head-toggle ${headingClassName}`}
+        aria-expanded={!minimized}
+        onClick={() => setMinimized((m) => !m)}
         onContextMenu={(e) =>
           openMenu(e, [
             {
@@ -49,39 +54,42 @@ export function SubjectChecklist({
           ])
         }
       >
-        {heading ?? subject.tag}
+        <span>{heading ?? subject.tag}</span>
         {subject.frontmatterError && (
           <span className="warn" title={subject.frontmatterError}>
             {" "}
             ⚠ unreadable — not editable
           </span>
         )}
-      </div>
-      <ul className="subtask-list">
-        {subject.subtasks.map((t, i) => (
-          <li key={t.name} className={t.done ? "is-done" : ""}>
-            <button
-              className={`subtask${t.done ? " is-done" : ""}`}
-              onClick={() => toggle.mutate({ subject, index: i })}
-              onContextMenu={(e) =>
-                openMenu(e, [
-                  {
-                    label: "delete task",
-                    confirmLabel: "really delete?",
-                    onSelect: () => deleteSubtask.mutate({ subject, index: i }),
-                  },
-                ])
-              }
-            >
-              <span className="box">{t.done ? "☑" : "☐"}</span>{" "}
-              <span className="label">{t.name}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+        <span className="caret">{minimized ? "▸" : "▾"}</span>
+      </button>
+      {!minimized && (
+        <ul className="subtask-list">
+          {subject.subtasks.map((t, i) => (
+            <li key={t.name} className={t.done ? "is-done" : ""}>
+              <button
+                className={`subtask${t.done ? " is-done" : ""}`}
+                onClick={() => toggle.mutate({ subject, index: i })}
+                onContextMenu={(e) =>
+                  openMenu(e, [
+                    {
+                      label: "delete task",
+                      confirmLabel: "really delete?",
+                      onSelect: () => deleteSubtask.mutate({ subject, index: i }),
+                    },
+                  ])
+                }
+              >
+                <span className="box">{t.done ? "☑" : "☐"}</span>{" "}
+                <span className="label">{t.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       {/* unreadable subjects stay read-only: rewriting their frontmatter
           would destroy whatever the parser choked on */}
-      {showAddRow && !subject.frontmatterError && (
+      {!minimized && showAddRow && !subject.frontmatterError && (
         <AddRow
           label="+ new task"
           placeholder="task name..."

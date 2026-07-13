@@ -649,6 +649,18 @@ button.plan-head:hover .name {
   margin-top: var(--sp-4);
 }
 
+/* subject headings are buttons: clicking minimizes/expands the checklist */
+.subject-head-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.subject-head-toggle .caret {
+  float: right;
+  color: var(--fg-dim);
+}
+
 .subtask-list {
   list-style: none;
 }

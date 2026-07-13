@@ -158,6 +158,31 @@ describe("PlansPage", () => {
     );
   });
 
+  it("minimizes a subject's tasks when its heading is clicked", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByText("Calculus II"));
+    const heading = screen.getByRole("button", { name: /integrals/, expanded: true });
+
+    await user.click(heading);
+    expect(heading).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("button", { name: /u-substitution drills/ }),
+    ).not.toBeInTheDocument();
+    // only the still-expanded subject (series) offers task creation
+    expect(screen.getAllByRole("button", { name: "+ new task" })).toHaveLength(1);
+    // the other subject stays expanded
+    expect(
+      screen.getByRole("button", { name: /power series exercises/ }),
+    ).toBeInTheDocument();
+
+    await user.click(heading);
+    expect(
+      screen.getByRole("button", { name: /u-substitution drills/ }),
+    ).toBeInTheDocument();
+  });
+
   it("creates plans/<slug>/subjects/<tag>.md when a new subject is named", async () => {
     const user = userEvent.setup();
     renderPage();
