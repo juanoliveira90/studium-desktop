@@ -17,6 +17,35 @@ import {
   useToggleSubtask,
 } from "./usePlans";
 
+/* Minimized subjects stay minimized across pages and app runs: the choice is
+   kept per subject file path in localStorage, not in the vault (it's a view
+   preference, not study data). */
+const MINIMIZED_KEY = "studium.plans.minimizedSubjects";
+
+function loadMinimizedPaths(): Set<string> {
+  const raw = localStorage.getItem(MINIMIZED_KEY);
+  if (!raw) return new Set();
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    const paths = Array.isArray(parsed)
+      ? parsed.filter((p): p is string => typeof p === "string")
+      : [];
+    return new Set(paths);
+  } catch {
+    return new Set();
+  }
+}
+
+function storeMinimized(path: string, minimized: boolean) {
+  const paths = loadMinimizedPaths();
+  if (minimized) {
+    paths.add(path);
+  } else {
+    paths.delete(path);
+  }
+  localStorage.setItem(MINIMIZED_KEY, JSON.stringify([...paths]));
+}
+
 export function SubjectChecklist({
   subject,
   openMenu,
@@ -35,7 +64,15 @@ export function SubjectChecklist({
   const addSubtask = useAddSubtask();
   const deleteSubject = useDeleteSubject();
   const deleteSubtask = useDeleteSubtask();
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(
+    () => loadMinimizedPaths().has(subject.path),
+  );
+
+  const toggleMinimized = () => {
+    const next = !minimized;
+    storeMinimized(subject.path, next);
+    setMinimized(next);
+  };
 
   return (
     <div className="subject">
@@ -43,7 +80,7 @@ export function SubjectChecklist({
         type="button"
         className={`subject-head-toggle ${headingClassName}`}
         aria-expanded={!minimized}
-        onClick={() => setMinimized((m) => !m)}
+        onClick={toggleMinimized}
         onContextMenu={(e) =>
           openMenu(e, [
             {

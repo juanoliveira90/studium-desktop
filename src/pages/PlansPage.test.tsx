@@ -77,6 +77,8 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  // minimized-subject choices persist in localStorage; keep tests independent
+  localStorage.clear();
 });
 
 function renderPage() {
@@ -180,6 +182,38 @@ describe("PlansPage", () => {
     await user.click(heading);
     expect(
       screen.getByRole("button", { name: /u-substitution drills/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps a subject minimized after leaving and reopening the plan", async () => {
+    const user = userEvent.setup();
+    const first = renderPage();
+
+    await user.click(await screen.findByText("Calculus II"));
+    await user.click(screen.getByRole("button", { name: /integrals/, expanded: true }));
+
+    // back to the list and into the plan again
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByText("Calculus II"));
+    expect(
+      screen.getByRole("button", { name: /integrals/, expanded: false }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /u-substitution drills/ }),
+    ).not.toBeInTheDocument();
+
+    // a fresh mount (new app run) still sees the choice
+    first.unmount();
+    renderPage();
+    await user.click(await screen.findByText("Calculus II"));
+    const heading = screen.getByRole("button", { name: /integrals/, expanded: false });
+
+    // unminimizing sticks the same way
+    await user.click(heading);
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByText("Calculus II"));
+    expect(
+      screen.getByRole("button", { name: /integrals/, expanded: true }),
     ).toBeInTheDocument();
   });
 

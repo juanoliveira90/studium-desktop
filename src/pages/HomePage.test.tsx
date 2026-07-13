@@ -61,6 +61,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  // minimized-subject choices persist in localStorage; keep tests independent
+  localStorage.clear();
 });
 
 function renderPage() {
