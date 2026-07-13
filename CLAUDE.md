@@ -29,6 +29,7 @@ src-tauri/              Rust shell
   tests/vault_core.rs   integration + property tests for all of the above
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
 docs/                   initialPlan.md (source of truth), ReferenceImage.md, futureIdeas.md (deferred features), adr/ (architecture decision records)
+install.sh              user-level install/update: tauri build + binary/icon/desktop entry into ~/.local (see README)
 ```
 
 ## Commands
