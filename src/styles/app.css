@@ -788,6 +788,16 @@ button.plan-head:hover .name {
   width: 8ch;
 }
 
+/* the plan select sizes to its widest option name; cap it to the space
+   left in the row and let long names truncate with an ellipsis */
+.event-form select[aria-label="linked plan"] {
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .event-form button {
   padding: var(--sp-1) var(--sp-3);
   border: 1px solid var(--border);
