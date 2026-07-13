@@ -10,5 +10,10 @@ export default defineConfig({
     // RTL's automatic DOM cleanup between tests hooks into a global afterEach.
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    // Node ≥25 puts an experimental localStorage getter on globalThis that
+    // yields undefined without --localstorage-file; its presence stops the
+    // jsdom environment from installing jsdom's working localStorage. Drop
+    // Node's in the test workers so jsdom's comes through.
+    execArgv: ["--no-experimental-webstorage"],
   },
 });
