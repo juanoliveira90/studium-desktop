@@ -12,7 +12,7 @@ import {
   type Weekday,
   WEEKDAYS,
 } from "../schedule/block";
-import type { Plan, Subtask } from "../plans/plan";
+import type { Plan, Subject, Subtask } from "../plans/plan";
 
 /** Date.getDay() is 0 = Sunday; the vault week starts on Monday. */
 const JS_DAY_TO_WEEKDAY: Weekday[] = [
@@ -36,6 +36,8 @@ export interface TodaySubject {
   path: string;
   subject: string;
   tasks: Subtask[];
+  /** The backing subject file — the write target for toggles and deletes. */
+  source: Subject;
 }
 
 /**
@@ -52,7 +54,7 @@ export function todaySubjects(
   return plans
     .filter((p) => linkedSlugs.has(p.slug))
     .flatMap((p) => p.subjects)
-    .map((s) => ({ path: s.path, subject: s.tag, tasks: s.subtasks }));
+    .map((s) => ({ path: s.path, subject: s.tag, tasks: s.subtasks, source: s }));
 }
 
 /** The first of today's blocks still ahead of now, if any. */

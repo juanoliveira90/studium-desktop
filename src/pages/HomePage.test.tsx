@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HomePage } from "./HomePage";
 import * as ipc from "../vault/ipc";
@@ -100,6 +101,62 @@ describe("HomePage", () => {
     const pending = within(list).getByText("partial fractions").closest("li")!;
     expect(pending).not.toHaveClass("is-done");
     expect(pending).toHaveTextContent("☐");
+  });
+
+  it("writes the flipped done flag back to the subject file on click", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const list = await screen.findByRole("list", { name: "today" });
+    await user.click(within(list).getByRole("button", { name: /partial fractions/ }));
+
+    expect(ipc.docWrite).toHaveBeenCalledWith(
+      "plans/calculus-ii/subjects/integrals.md",
+      {
+        tag: "integrals",
+        subtasks: [
+          { name: "u-substitution drills", done: true },
+          { name: "partial fractions", done: true },
+        ],
+      },
+      "",
+    );
+  });
+
+  it("removes a task from its subject file on a right-click delete", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const list = await screen.findByRole("list", { name: "today" });
+    const task = within(list).getByRole("button", { name: /u-substitution drills/ });
+    await user.pointer({ keys: "[MouseRight]", target: task });
+    // first click arms, does not delete
+    await user.click(screen.getByRole("menuitem", { name: "delete task" }));
+    expect(ipc.docWrite).not.toHaveBeenCalled();
+    // second click confirms
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.docWrite).toHaveBeenCalledWith(
+      "plans/calculus-ii/subjects/integrals.md",
+      {
+        tag: "integrals",
+        subtasks: [{ name: "partial fractions", done: false }],
+      },
+      "",
+    );
+    expect(ipc.docDelete).not.toHaveBeenCalled();
+  });
+
+  it("deletes a subject file from a right-click on its line", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const list = await screen.findByRole("list", { name: "today" });
+    await user.pointer({ keys: "[MouseRight]", target: within(list).getByText("- integrals") });
+    await user.click(screen.getByRole("menuitem", { name: "delete subject" }));
+    await user.click(screen.getByRole("menuitem", { name: "really delete?" }));
+
+    expect(ipc.docDelete).toHaveBeenCalledWith("plans/calculus-ii/subjects/integrals.md");
   });
 
   it("renders today's schedule events with their times", async () => {

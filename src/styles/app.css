@@ -306,22 +306,16 @@
   padding: 3px 0;
 }
 
-.today-tasks {
-  list-style: none;
+/* the shared subject checklist, indented under its subject line */
+.today-list .subtask-list {
   padding-left: var(--sp-4);
 }
 
-.today-tasks li {
-  display: flex;
-  gap: var(--sp-2);
-  padding: 3px 0;
-}
-
-.today-tasks .box {
+.today-list .subtask .box {
   color: var(--accent);
 }
 
-.today-tasks li.is-done .label {
+.today-list li.is-done .label {
   color: var(--fg-dim);
 }
 

@@ -8,6 +8,8 @@ import {
 import { useSchedule } from "../schedule/useSchedule";
 import type { Plan } from "../plans/plan";
 import { usePlans } from "../plans/usePlans";
+import { SubjectChecklist } from "../plans/SubjectChecklist";
+import { useContextMenu } from "../components/useContextMenu";
 import { timeOf, todaySubjects, upNext, weekdayOf } from "../home/today";
 import { useVault } from "../vault/useVault";
 import { VaultGate } from "../vault/VaultGate";
@@ -57,6 +59,7 @@ function HomeToday({ blocks, plans }: { blocks: ScheduleBlock[]; plans: Plan[] }
   const events = blocksForDay(day, blocks);
   const next = upNext(blocks, day, now);
   const colors = planColorBySlug(blocks);
+  const { menu, open: openMenu } = useContextMenu();
 
   return (
     <>
@@ -66,15 +69,13 @@ function HomeToday({ blocks, plans }: { blocks: ScheduleBlock[]; plans: Plan[] }
           <ul className="today-list" aria-label="today">
             {subjects.map((s) => (
               <li key={s.path}>
-                <div className="subject-line">- {s.subject}</div>
-                <ul className="today-tasks">
-                  {s.tasks.map((t) => (
-                    <li key={t.name} className={t.done ? "is-done" : ""}>
-                      <span className="box">{t.done ? "☑" : "☐"}</span>
-                      <span className="label">{t.name}</span>
-                    </li>
-                  ))}
-                </ul>
+                <SubjectChecklist
+                  subject={s.source}
+                  openMenu={openMenu}
+                  heading={`- ${s.subject}`}
+                  headingClassName="subject-line"
+                  showAddRow={false}
+                />
               </li>
             ))}
           </ul>
@@ -125,6 +126,7 @@ function HomeToday({ blocks, plans }: { blocks: ScheduleBlock[]; plans: Plan[] }
           )}
         </div>
       </div>
+      {menu}
     </>
   );
 }

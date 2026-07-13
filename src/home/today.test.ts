@@ -71,6 +71,12 @@ describe("todaySubjects", () => {
     ]);
   });
 
+  it("carries the backing subject file so tasks can be written back", () => {
+    const groups = todaySubjects(BLOCKS, PLANS, "mon");
+    expect(groups[0].source).toBe(PLANS[0].subjects[0]);
+    expect(groups[0].source.path).toBe("plans/x/subjects/integrals.md");
+  });
+
   it("contains neither schedule blocks nor plans without a today event", () => {
     const monday = todaySubjects(BLOCKS, PLANS, "mon");
     const labels = monday.flatMap((g) => [g.subject, ...g.tasks.map((t) => t.name)]);
