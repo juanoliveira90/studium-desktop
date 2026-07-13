@@ -1,21 +1,14 @@
 import { useEffect, useState } from "react";
 import { Page } from "../components/Page";
-import { type ContextMenuItem } from "../components/ContextMenu";
+import { AddRow } from "../components/AddRow";
 import { useContextMenu } from "../components/useContextMenu";
+import { planProgress, type Plan } from "../plans/plan";
+import { SubjectChecklist } from "../plans/SubjectChecklist";
 import {
-  planProgress,
-  type Plan,
-  type Subject,
-} from "../plans/plan";
-import {
-  useAddSubtask,
   useCreatePlan,
   useCreateSubject,
   useDeletePlan,
-  useDeleteSubject,
-  useDeleteSubtask,
   usePlans,
-  useToggleSubtask,
 } from "../plans/usePlans";
 import { planColorBySlug } from "../schedule/block";
 import { useSchedule } from "../schedule/useSchedule";
@@ -63,59 +56,6 @@ export function PlansPage() {
     <Page title="study plan">
       {body}
     </Page>
-  );
-}
-
-/**
- * The "+ new <thing>" row used at every level (plan, subject, task): a button
- * that swaps to a text input. Enter hands the trimmed name to onSubmit along
- * with a close callback (called on mutation success, so the row stays open on
- * failure); escape cancels without bubbling to page-level escape handlers.
- */
-function AddRow({
-  label,
-  placeholder,
-  inputLabel,
-  onSubmit,
-}: {
-  label: string;
-  placeholder: string;
-  inputLabel: string;
-  onSubmit: (name: string, close: () => void) => void;
-}) {
-  const [value, setValue] = useState<string | null>(null);
-
-  if (value === null) {
-    return (
-      <button className="add-row" onClick={() => setValue("")}>
-        {label}
-      </button>
-    );
-  }
-
-  const submit = () => {
-    const name = value.trim();
-    if (!name) return;
-    onSubmit(name, () => setValue(null));
-  };
-
-  return (
-    <input
-      className="note-search add-row"
-      type="text"
-      placeholder={placeholder}
-      aria-label={inputLabel}
-      autoFocus
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") submit();
-        if (e.key === "Escape") {
-          e.stopPropagation();
-          setValue(null);
-        }
-      }}
-    />
   );
 }
 
@@ -212,10 +152,7 @@ function PlanDetail({
   color: number | undefined;
   onBack: () => void;
 }) {
-  const toggle = useToggleSubtask();
   const createSubject = useCreateSubject();
-  const deleteSubject = useDeleteSubject();
-  const deleteSubtask = useDeleteSubtask();
   const { menu, open: openMenu } = useContextMenu();
 
   // window-level so escape works without any element focused
@@ -245,14 +182,7 @@ function PlanDetail({
         <span className="hint">esc to close</span>
       </div>
       {plan.subjects.map((s) => (
-        <SubjectChecklist
-          key={s.path}
-          subject={s}
-          onToggle={toggle.mutate}
-          openMenu={openMenu}
-          onDeleteSubject={(subject) => deleteSubject.mutate(subject.path)}
-          onDeleteSubtask={deleteSubtask.mutate}
-        />
+        <SubjectChecklist key={s.path} subject={s} openMenu={openMenu} />
       ))}
       {plan.subjects.length === 0 && <p className="muted">no subjects yet</p>}
       <AddRow
@@ -268,76 +198,3 @@ function PlanDetail({
   );
 }
 
-function SubjectChecklist({
-  subject,
-  onToggle,
-  openMenu,
-  onDeleteSubject,
-  onDeleteSubtask,
-}: {
-  subject: Subject;
-  onToggle: (args: { subject: Subject; index: number }) => void;
-  openMenu: (e: React.MouseEvent, items: ContextMenuItem[]) => void;
-  onDeleteSubject: (subject: Subject) => void;
-  onDeleteSubtask: (args: { subject: Subject; index: number }) => void;
-}) {
-  const addSubtask = useAddSubtask();
-
-  return (
-    <div className="subject">
-      <div
-        className="section-label"
-        onContextMenu={(e) =>
-          openMenu(e, [
-            {
-              label: "delete subject",
-              confirmLabel: "really delete?",
-              onSelect: () => onDeleteSubject(subject),
-            },
-          ])
-        }
-      >
-        {subject.tag}
-        {subject.frontmatterError && (
-          <span className="warn" title={subject.frontmatterError}>
-            {" "}
-            ⚠ unreadable — not editable
-          </span>
-        )}
-      </div>
-      <ul className="subtask-list">
-        {subject.subtasks.map((t, i) => (
-          <li key={t.name}>
-            <button
-              className={`subtask${t.done ? " is-done" : ""}`}
-              onClick={() => onToggle({ subject, index: i })}
-              onContextMenu={(e) =>
-                openMenu(e, [
-                  {
-                    label: "delete task",
-                    confirmLabel: "really delete?",
-                    onSelect: () => onDeleteSubtask({ subject, index: i }),
-                  },
-                ])
-              }
-            >
-              {t.done ? "☑" : "☐"} {t.name}
-            </button>
-          </li>
-        ))}
-      </ul>
-      {/* unreadable subjects stay read-only: rewriting their frontmatter
-          would destroy whatever the parser choked on */}
-      {!subject.frontmatterError && (
-        <AddRow
-          label="+ new task"
-          placeholder="task name..."
-          inputLabel={`new task in ${subject.tag}`}
-          onSubmit={(name, close) =>
-            addSubtask.mutate({ subject, name }, { onSuccess: close })
-          }
-        />
-      )}
-    </div>
-  );
-}
