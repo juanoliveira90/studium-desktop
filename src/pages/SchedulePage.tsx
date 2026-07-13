@@ -5,6 +5,7 @@ import { usePlans } from "../plans/usePlans";
 import type { Plan } from "../plans/plan";
 import {
   blocksForDay,
+  cellEventTimes,
   gridPlacement,
   isValidTime,
   planColorBySlug,
@@ -57,12 +58,16 @@ export function SchedulePage() {
   );
 }
 
-/** The week grid plus event CRUD: a form below the grid adds events, clicking
- *  a block opens the form in a popover beside it, right-click deletes after
+/** The week grid plus event CRUD: clicking an empty cell adds an event
+ *  starting at that half-hour (Google Calendar style, in a popover at the
+ *  click), the form below the grid adds one from scratch, clicking a block
+ *  opens the form in a popover beside it, right-click deletes after
  *  confirming. */
 function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: string[] }) {
   // null: form closed; "new": adding; a block: editing that entry
   const [editing, setEditing] = useState<ScheduleBlock | "new" | null>(null);
+  // day/times of the clicked empty cell; unset when adding from the button
+  const [prefill, setPrefill] = useState<Partial<EventFields> | undefined>(undefined);
   // where the edited block sits on screen, so the form can anchor beside it
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
   const addEvent = useAddEvent();
@@ -83,8 +88,8 @@ function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: s
 
   const form = editing !== null && (
     <EventForm
-      key={editing === "new" ? "new" : editing.index}
-      initial={editing === "new" ? undefined : editing}
+      key={editing === "new" ? `new-${prefill?.day}-${prefill?.start}` : editing.index}
+      initial={editing === "new" ? prefill : editing}
       plans={plansQuery.data?.plans ?? []}
       submitLabel={editing === "new" ? "add event" : "save event"}
       onSubmit={submit}
@@ -101,6 +106,11 @@ function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: s
           setAnchor(e.currentTarget.getBoundingClientRect());
           setEditing(block);
         }}
+        onCellClick={(day, halfHourRow, e) => {
+          setAnchor(e.currentTarget.getBoundingClientRect());
+          setPrefill(cellEventTimes(day, halfHourRow));
+          setEditing("new");
+        }}
         onBlockContextMenu={(e, block) =>
           openMenu(e, [
             {
@@ -112,12 +122,18 @@ function ScheduleEditor({ blocks, errors }: { blocks: ScheduleBlock[]; errors: s
         }
       />
       {editing === null && (
-        <button className="add-row" onClick={() => setEditing("new")}>
+        <button
+          className="add-row"
+          onClick={() => {
+            setPrefill(undefined);
+            setEditing("new");
+          }}
+        >
           + new event
         </button>
       )}
-      {editing === "new" && form}
-      {editing !== null && editing !== "new" && anchor && (
+      {editing === "new" && prefill === undefined && form}
+      {editing !== null && (editing !== "new" || prefill !== undefined) && anchor && (
         <EventPopover anchor={anchor}>{form}</EventPopover>
       )}
       {errors.length > 0 && (
@@ -178,7 +194,8 @@ function EventForm({
   onCancel,
   writeError,
 }: {
-  initial?: ScheduleBlock;
+  // a block being edited, or the day/times prefilled from a cell click
+  initial?: Partial<EventFields>;
   plans: Plan[];
   submitLabel: string;
   onSubmit: (fields: EventFields) => void;
@@ -285,10 +302,12 @@ function EventForm({
 function WeekGrid({
   blocks,
   onBlockClick,
+  onCellClick,
   onBlockContextMenu,
 }: {
   blocks: ScheduleBlock[];
   onBlockClick: (block: ScheduleBlock, e: React.MouseEvent<HTMLElement>) => void;
+  onCellClick: (day: Weekday, halfHourRow: number, e: React.MouseEvent<HTMLElement>) => void;
   onBlockContextMenu: (e: React.MouseEvent, block: ScheduleBlock) => void;
 }) {
   const planColors = planColorBySlug(blocks);
@@ -327,6 +346,9 @@ function WeekGrid({
           key={`${row}-${day}`}
           className={`cell${row % 2 === 0 ? " is-half" : ""}`}
           style={{ gridColumn: day + 2, gridRow: row + 2 }}
+          // Google Calendar style: a click on empty grid starts a new event
+          // there; the same cell in any wrap-around copy is the same time
+          onClick={(e) => onCellClick(WEEKDAYS[day], row % CYCLE_ROWS, e)}
         />,
       );
     }

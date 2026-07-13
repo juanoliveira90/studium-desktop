@@ -39,6 +39,27 @@ export const toMinutes = (time: string) => {
   return h * 60 + m;
 };
 
+/** Minutes since midnight → "HH:MM". */
+const fromMinutes = (mins: number) => {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
+/**
+ * The day and times a new event gets from a click on an empty grid cell:
+ * the cell's half-hour row (0 = midnight) as the start, one hour long,
+ * clamped to 23:59 near midnight — the schedule format doesn't cross it.
+ */
+export function cellEventTimes(
+  day: Weekday,
+  halfHourRow: number,
+): Pick<EventFields, "day" | "start" | "end"> {
+  const startMin = halfHourRow * 30;
+  const endMin = Math.min(startMin + 60, 24 * 60 - 1);
+  return { day, start: fromMinutes(startMin), end: fromMinutes(endMin) };
+}
+
 export function formatBlockTime(b: ScheduleBlock): string {
   return `${b.start}–${b.end}`;
 }

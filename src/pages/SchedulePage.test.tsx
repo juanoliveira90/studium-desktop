@@ -249,6 +249,56 @@ describe("SchedulePage", () => {
     expect(screen.getByLabelText("event title").closest(".event-popover")).toBeNull();
   });
 
+  it("opens a prefilled new-event popover from a click on an empty cell", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("mon");
+
+    // cells are row-major (7 per row): absolute row 30 is 15:00 (half-hour
+    // rows from midnight), day index 3 is thu
+    const cell = document.querySelectorAll(".week-grid .cell")[30 * 7 + 3] as HTMLElement;
+    await user.click(cell);
+
+    expect(screen.getByLabelText("event day")).toHaveValue("thu");
+    expect(screen.getByLabelText("start time")).toHaveValue("15:00");
+    expect(screen.getByLabelText("end time")).toHaveValue("16:00");
+    // shown where the click happened, like editing a block — not below the grid
+    expect(screen.getByLabelText("event title").closest(".event-popover")).not.toBeNull();
+  });
+
+  it("maps cell clicks in the wrap-around copies to the same times", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("mon");
+
+    // the same thu 15:00 cell, one 24h copy (48 rows) further down
+    const cell = document.querySelectorAll(".week-grid .cell")[(30 + 48) * 7 + 3] as HTMLElement;
+    await user.click(cell);
+
+    expect(screen.getByLabelText("event day")).toHaveValue("thu");
+    expect(screen.getByLabelText("start time")).toHaveValue("15:00");
+    expect(screen.getByLabelText("end time")).toHaveValue("16:00");
+  });
+
+  it("adds an event through the cell-click popover", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText("mon");
+
+    const cell = document.querySelectorAll(".week-grid .cell")[30 * 7 + 3] as HTMLElement;
+    await user.click(cell);
+    await user.type(screen.getByLabelText("event title"), "office hours");
+    await user.click(screen.getByRole("button", { name: "add event" }));
+
+    expect(ipc.scheduleAdd).toHaveBeenCalledWith({
+      day: "thu",
+      start: "15:00",
+      end: "16:00",
+      title: "office hours",
+    });
+    expect(await screen.findByRole("button", { name: "+ new event" })).toBeInTheDocument();
+  });
+
   it("cancelling an edit writes nothing", async () => {
     const user = userEvent.setup();
     renderPage();

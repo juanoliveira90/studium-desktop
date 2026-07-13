@@ -715,6 +715,12 @@ button.plan-head:hover .name {
 .week-grid .cell {
   border-left: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+  /* clicking empty grid starts a new event at that half-hour */
+  cursor: pointer;
+}
+
+.week-grid .cell:hover {
+  background: var(--accent-bg);
 }
 
 .week-grid .cell.is-hour {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   blockDuration,
   blocksForDay,
+  cellEventTimes,
   eventFrontmatter,
   formatBlockTime,
   gridPlacement,
@@ -201,6 +202,19 @@ describe("eventFrontmatter", () => {
     expect(
       eventFrontmatter({ day: "tue", start: "10:00", end: "12:00", title: "gym", description: "", plan: "" }),
     ).toEqual({ day: "tue", start: "10:00", end: "12:00", title: "gym" });
+  });
+});
+
+describe("cellEventTimes", () => {
+  it("starts at the clicked half-hour and lasts one hour", () => {
+    expect(cellEventTimes("mon", 0)).toEqual({ day: "mon", start: "00:00", end: "01:00" });
+    expect(cellEventTimes("thu", 30)).toEqual({ day: "thu", start: "15:00", end: "16:00" });
+    expect(cellEventTimes("sun", 19)).toEqual({ day: "sun", start: "09:30", end: "10:30" });
+  });
+
+  it("clamps the end before midnight, where the schedule format stops", () => {
+    expect(cellEventTimes("fri", 46)).toEqual({ day: "fri", start: "23:00", end: "23:59" });
+    expect(cellEventTimes("fri", 47)).toEqual({ day: "fri", start: "23:30", end: "23:59" });
   });
 });
 
