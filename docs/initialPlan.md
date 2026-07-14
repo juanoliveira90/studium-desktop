@@ -73,12 +73,12 @@ Data-model implications from the reference:
 - No command-palette / terminal-command navigation for now. When it lands (step 7), every action registers in a central command registry `{id, title, keybinding, run}` — the palette, keymap, and keybind customization all read from this registry; the current `Binding {combo, id, run, title?}` shape in `keymap.ts` is its seed.
 - Keybindings overridable in `.studium/config.toml` (`[keys] "alt+1" = "goto.home"`).
 
-## Theming
+## Theming (shipped in step 8, `src/theming/` + `src-tauri/src/theme/`)
 
-- All colors/spacing/fonts as CSS variables on `:root` (`--bg`, `--fg`, `--accent`, `--border`, `--font-mono`, ...), documented as the theme API.
-- **base16/pywal**: Rust side reads `~/.cache/wal/colors.json` (and accepts a base16 yaml path in config); maps the 16 colors onto the CSS variables; watches the file so `wal` re-rice retints the app live.
-- **User CSS**: any `.css` in `vault/.studium/themes/` selectable in config/palette; injected after the variable layer so it can override anything (Obsidian model).
-- Ship 2–3 built-in fallback themes (gruvbox, nord) for machines without pywal.
+- All colors/spacing/fonts as CSS variables on `:root` (`--bg`, `--fg`, `--accent`, `--border`, `--font-mono`, ...), documented as the theme API in `styles/tokens.css`. Themes override the ~20 color vars only, via a runtime `<style id="studium-theme-vars">` owned by a single app-shell layer.
+- **pywal/base16**: Rust reads `~/.cache/wal/colors.json` and (when a `base16_path` yaml is set in `~/.config/studium/config.toml`, editable in config → themes) the base16 scheme; the frontend maps the 16 raw colors onto the CSS variables (`mapPalette.ts`, derived shades blended in `color.ts`). Each source file is watched (debounced parent-dir watch) and re-emits `theme:changed`, so a `wal` re-rice retints the app live; a broken/missing source falls back to Solarized Light with the error shown inline in the themes section.
+- **User CSS**: every `.css` in `vault/.studium/themes/` is an overlay snippet (Obsidian model) — individually toggleable in config → themes on top of any theme, injected after the variable layer so it can override anything, read through Rust commands (the webview has no fs access), live-reloaded via `vault:changed`.
+- 12 built-in themes for machines without pywal: Solarized Light (default), Nord, Gruvbox Dark, and the omarchy set (Tokyo Night, Catppuccin, Catppuccin Latte, Everforest, Kanagawa, Matte Black, Osaka Jade, Ristretto, Rose Pine). Selection and enabled snippets persist in localStorage like the other UI settings.
 
 ## Development methodology
 

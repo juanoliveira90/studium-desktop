@@ -20,14 +20,17 @@ src/                    React frontend
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor + livePreview.ts (Obsidian-style live preview decorations; Ctrl+E / header button toggles live↔raw, persisted in localStorage)
   schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
   plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, progress) + usePlans query/mutation hooks + SubjectChecklist (toggle/delete task checklist, minimizable via its heading — persisted in localStorage, shared with home)
+  theming/              theming module: builtins.ts (12 built-in palettes over the tokens.css color vars) + ipc.ts (theming invoke layer: snippets, pywal, base16 + theme:changed) + inject.ts (runtime <style> layers: theme vars, then user CSS snippets) + color.ts/mapPalette.ts (hex blending, pywal/base16 → token mapping) + themeSettings.tsx (selection + enabled snippets, localStorage) + useSnippets.ts (TanStack queries under ["theme", ...]) + ThemeVarsLayer/ThemeSnippetLayer (app-shell layers owning the injected styles) + ThemesSection (config modal: theme picker, base16 path, snippet toggles)
   home/                 home module: today.ts — pure aggregation over schedule + plans data (today's subjects + tasks, up next, clock helpers)
   data/                 format.ts — shared date display formatting for the vault's ISO dates
   pages/                one page per feature (Home, Notes, Plans, Schedule) + pages.ts registry
 src-tauri/              Rust shell
-  src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher
-  src/config.rs         app config (~/.config/studium/config.toml — current vault path + known-vaults list)
-  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write/delete, schedule_list/add/update/delete) + vault:changed event
+  src/vault/            vault core: frontmatter round-trip, atomic writes, open/create/list/read/write, notify watcher, theme snippet list/read (.studium/themes/*.css)
+  src/theme/            theme sources: pywal colors.json + base16 yaml readers, single-file ThemeWatcher (parent-dir watch survives rename-replace)
+  src/config.rs         app config (~/.config/studium/config.toml — current vault path, known-vaults list, optional base16_path)
+  src/commands.rs       Tauri invoke surface (vault_open/create/list_known/forget/delete, doc_list/read/write/delete, schedule_list/add/update/delete, theme_list/read_snippets, theme_read_pywal/base16, config_get/set_base16_path) + vault:changed and theme:changed events
   tests/vault_core.rs   integration + property tests for all of the above
+  tests/theme_core.rs   pywal/base16 parsing + theme watcher tests
 sample-vault/           vault fixture in the final format — Rust test data; replaces page mock data as modules land
 docs/                   initialPlan.md (source of truth), ReferenceImage.md, futureIdeas.md (deferred features), adr/ (architecture decision records)
 install.sh              user-level install/update: tauri build + binary/icon/desktop entry into ~/.local (see README)
