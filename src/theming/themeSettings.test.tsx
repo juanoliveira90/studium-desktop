@@ -20,24 +20,27 @@ function Probe() {
 
 beforeEach(() => {
   localStorage.clear();
-  document.getElementById("studium-theme-vars")?.remove();
 });
 
 describe("useThemeSettingsState", () => {
-  it("defaults to solarized light with no overrides applied", () => {
+  it("defaults to solarized light", () => {
     render(<Probe />);
 
     expect(screen.getByTestId("theme-id")).toHaveTextContent("solarized-light");
-    expect(document.getElementById("studium-theme-vars")?.textContent).toBe("");
   });
 
-  it("reads the persisted theme from localStorage and applies it", () => {
+  it("reads the persisted theme from localStorage", () => {
     localStorage.setItem("studium.ui.theme", "gruvbox-dark");
     render(<Probe />);
 
     expect(screen.getByTestId("theme-id")).toHaveTextContent("gruvbox-dark");
-    const style = document.getElementById("studium-theme-vars");
-    expect(style?.textContent).toContain("--bg: #282828;");
+  });
+
+  it("accepts pywal as a persisted source", () => {
+    localStorage.setItem("studium.ui.theme", "pywal");
+    render(<Probe />);
+
+    expect(screen.getByTestId("theme-id")).toHaveTextContent("pywal");
   });
 
   it("falls back to the default on an unknown stored theme", () => {
@@ -79,7 +82,7 @@ describe("useThemeSettingsState", () => {
     expect(localStorage.getItem("studium.ui.themeSnippets")).toBe("[]");
   });
 
-  it("setter persists, updates state and retints", async () => {
+  it("setter persists and updates state", async () => {
     const user = userEvent.setup();
     render(<Probe />);
 
@@ -87,7 +90,5 @@ describe("useThemeSettingsState", () => {
 
     expect(screen.getByTestId("theme-id")).toHaveTextContent("nord");
     expect(localStorage.getItem("studium.ui.theme")).toBe("nord");
-    const style = document.getElementById("studium-theme-vars");
-    expect(style?.textContent).toContain("--bg: #2e3440;");
   });
 });

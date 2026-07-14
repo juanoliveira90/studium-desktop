@@ -10,11 +10,16 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
 use crate::config::AppConfig;
+use crate::theme::{self, PywalPalette, ThemeWatcher};
 use crate::vault::{Document, Vault, VaultWatcher};
 
 /// Event emitted to the frontend whenever files in the open vault change.
 /// Payload: `{ paths: string[] }` with vault-relative paths.
 pub const VAULT_CHANGED_EVENT: &str = "vault:changed";
+
+/// Event emitted when a theme source file (pywal's colors.json) changes.
+/// Payload: `{ source: "pywal" }`.
+pub const THEME_CHANGED_EVENT: &str = "theme:changed";
 
 #[derive(Default)]
 pub struct VaultState(Mutex<Option<OpenVault>>);
@@ -53,6 +58,17 @@ pub struct ScheduleEntry {
 #[derive(Serialize, Clone)]
 struct VaultChangedPayload {
     paths: Vec<String>,
+}
+
+/// Watchers over theme source files, alive for the whole app run.
+#[derive(Default)]
+pub struct ThemeWatchState {
+    pywal: Mutex<Option<ThemeWatcher>>,
+}
+
+#[derive(Serialize, Clone)]
+struct ThemeChangedPayload {
+    source: String,
 }
 
 /// The vault remembered in `~/.config/studium/config.toml`, if any.
@@ -276,6 +292,41 @@ pub fn theme_read_snippet(state: State<'_, VaultState>, name: String) -> Result<
     with_vault(&state, |vault| {
         vault.read_theme_snippet(&name).map_err(|e| e.to_string())
     })
+}
+
+/// The current pywal palette from `~/.cache/wal/colors.json`. Also makes
+/// sure the file is being watched, so a later `wal` run retints the app
+/// live via `theme:changed`.
+#[tauri::command]
+pub fn theme_read_pywal(
+    app: AppHandle,
+    watch: State<'_, ThemeWatchState>,
+) -> Result<PywalPalette, String> {
+    let path = theme::default_pywal_path().ok_or("no cache directory on this system")?;
+    ensure_pywal_watcher(&app, &watch, &path);
+    theme::read_pywal(&path).map_err(|e| e.to_string())
+}
+
+/// Starts the pywal watcher once per app run. Best-effort: with no
+/// ~/.cache/wal yet there is nothing to watch, and the read that follows
+/// reports the real problem.
+fn ensure_pywal_watcher(app: &AppHandle, watch: &State<'_, ThemeWatchState>, path: &Path) {
+    let Ok(mut guard) = watch.pywal.lock() else {
+        return;
+    };
+    if guard.is_some() {
+        return;
+    }
+    let emitter = app.clone();
+    let started = ThemeWatcher::start(path, move || {
+        let payload = ThemeChangedPayload {
+            source: "pywal".to_string(),
+        };
+        let _ = emitter.emit(THEME_CHANGED_EVENT, payload);
+    });
+    if let Ok(watcher) = started {
+        *guard = Some(watcher);
+    }
 }
 
 /// A JSON frontmatter object from the webview as the YAML mapping the vault

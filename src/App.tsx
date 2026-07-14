@@ -12,6 +12,7 @@ import {
   useThemeSettingsState,
 } from "./theming/themeSettings";
 import { ThemeSnippetLayer } from "./theming/snippets";
+import { ThemeVarsLayer } from "./theming/sources";
 
 function App() {
   const [active, setActive] = useState<PageId>("home");
@@ -60,6 +61,7 @@ function App() {
       <SettingsContext.Provider value={() => setSettingsOpen(true)}>
         <UiSettingsContext.Provider value={ui}>
           <ThemeSettingsContext.Provider value={theme}>
+            <ThemeVarsLayer />
             <ThemeSnippetLayer />
             <div
               className="app"

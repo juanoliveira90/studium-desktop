@@ -61,6 +61,27 @@ describe("ThemesSection", () => {
     expect(theme.setThemeId).toHaveBeenCalledWith("rose-pine");
   });
 
+  it("offers pywal as a source and selects it", async () => {
+    const user = userEvent.setup();
+    const theme = renderSection();
+
+    await user.click(screen.getByRole("radio", { name: "pywal" }));
+
+    expect(theme.setThemeId).toHaveBeenCalledWith("pywal");
+  });
+
+  it("shows the pywal read error inline when pywal is selected but broken", async () => {
+    vi.mocked(ipc.themeReadPywal).mockRejectedValue(
+      new Error("colors.json: no such file — run wal first"),
+    );
+    renderSection({ themeId: "pywal" });
+
+    expect(screen.getByRole("radio", { name: "pywal" })).toBeChecked();
+    expect(
+      await screen.findByText(/colors\.json: no such file/),
+    ).toBeInTheDocument();
+  });
+
   it("lists user css snippets with the enabled ones checked", async () => {
     vi.mocked(ipc.themeListSnippets).mockResolvedValue(["a.css", "b.css"]);
     renderSection({ enabledSnippets: ["b.css"] });

@@ -1,5 +1,5 @@
 import { BUILTIN_THEMES } from "./builtins";
-import { useSnippetList } from "./useSnippets";
+import { usePywalPalette, useSnippetList } from "./useSnippets";
 import { useThemeSettings } from "./themeSettings";
 
 /** Themes section of the config modal: color theme + user CSS snippets. */
@@ -7,6 +7,10 @@ export function ThemesSection() {
   const theme = useThemeSettings();
   const snippets = useSnippetList();
   const snippetNames = snippets.data ?? [];
+
+  const isPywal = theme.themeId === "pywal";
+  const pywal = usePywalPalette(isPywal);
+  const pywalError = isPywal && pywal.isError ? String(pywal.error) : null;
 
   return (
     <>
@@ -25,6 +29,17 @@ export function ThemesSection() {
             {builtin.label}
           </label>
         ))}
+        <label className="config-option">
+          <input
+            type="radio"
+            name="theme"
+            value="pywal"
+            checked={isPywal}
+            onChange={() => theme.setThemeId("pywal")}
+          />
+          pywal
+        </label>
+        {pywalError && <p className="muted">{pywalError}</p>}
       </fieldset>
       <fieldset className="config-field">
         <legend>user css</legend>

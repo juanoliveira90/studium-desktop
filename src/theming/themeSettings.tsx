@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { BUILTIN_THEMES } from "./builtins";
-import { applyThemeVars } from "./inject";
 
 /**
  * Theme selection and enabled user CSS snippets (config modal → themes
@@ -20,8 +19,13 @@ const THEME_KEY = "studium.ui.theme";
 const SNIPPETS_KEY = "studium.ui.themeSnippets";
 const DEFAULT_THEME_ID = BUILTIN_THEMES[0].id;
 
+/** Selectable non-builtin sources (live palettes read by Rust). */
+export const THEME_SOURCES = ["pywal"] as const;
+
 function isKnownThemeId(id: string | null): id is string {
-  return BUILTIN_THEMES.some((theme) => theme.id === id);
+  const isBuiltin = BUILTIN_THEMES.some((theme) => theme.id === id);
+  const isSource = (THEME_SOURCES as readonly string[]).includes(id ?? "");
+  return isBuiltin || isSource;
 }
 
 function loadThemeId(): string {
@@ -59,11 +63,6 @@ export function useThemeSettingsState(): ThemeSettings {
     localStorage.setItem(SNIPPETS_KEY, JSON.stringify(next));
     setEnabledSnippets(next);
   };
-
-  useEffect(() => {
-    const theme = BUILTIN_THEMES.find((t) => t.id === themeId);
-    applyThemeVars(theme?.vars ?? {});
-  }, [themeId]);
 
   return { themeId, setThemeId, enabledSnippets, toggleSnippet };
 }

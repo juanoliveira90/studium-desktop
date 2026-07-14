@@ -11,6 +11,7 @@ vi.mock("./theming/ipc");
 beforeEach(() => {
   localStorage.clear();
   vi.mocked(themeIpc.themeListSnippets).mockResolvedValue([]);
+  vi.mocked(themeIpc.onThemeChanged).mockReturnValue(() => {});
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.docList).mockResolvedValue([]);
