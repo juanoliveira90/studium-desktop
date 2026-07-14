@@ -5,11 +5,13 @@ import { TopBar } from "./components/TopBar";
 import { SettingsContext } from "./components/settingsContext";
 import { PAGES, type PageId } from "./pages/pages";
 import { onVaultChanged } from "./vault/ipc";
-import { VaultSettingsModal } from "./vault/VaultSettingsModal";
+import { ConfigModal } from "./config/ConfigModal";
+import { UiSettingsContext, useUiSettingsState } from "./config/uiSettings";
 
 function App() {
   const [active, setActive] = useState<PageId>("home");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const ui = useUiSettingsState();
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );
@@ -43,13 +45,19 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsContext.Provider value={() => setSettingsOpen(true)}>
-        <div className="app">
-          <TopBar pages={PAGES} activeId={active} onSelect={setActive} />
-          <main className="page-container">
-            <Component />
-          </main>
-        </div>
-        {settingsOpen && <VaultSettingsModal onClose={() => setSettingsOpen(false)} />}
+        <UiSettingsContext.Provider value={ui}>
+          <div
+            className="app"
+            data-bar-position={ui.barPosition}
+            data-labels={ui.showLabels ? "shown" : "hidden"}
+          >
+            <TopBar pages={PAGES} activeId={active} onSelect={setActive} />
+            <main className="page-container">
+              <Component />
+            </main>
+          </div>
+          {settingsOpen && <ConfigModal onClose={() => setSettingsOpen(false)} />}
+        </UiSettingsContext.Provider>
       </SettingsContext.Provider>
     </QueryClientProvider>
   );

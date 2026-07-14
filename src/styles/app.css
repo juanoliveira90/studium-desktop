@@ -12,6 +12,19 @@
   display: flex;
 }
 
+/* bar position (config → customization) drives the shell's flex axis */
+.app[data-bar-position="bottom"] {
+  flex-direction: column-reverse;
+}
+
+.app[data-bar-position="left"] {
+  flex-direction: row;
+}
+
+.app[data-bar-position="right"] {
+  flex-direction: row-reverse;
+}
+
 /* ── top bar ───────────────────────────────────────────── */
 
 .top-bar {
@@ -62,6 +75,74 @@
   bottom: 0;
 }
 
+/* bottom bar: border and active indicator flip to the top edge */
+.app[data-bar-position="bottom"] .top-bar {
+  border-bottom: none;
+  border-top: 1px solid var(--border);
+}
+
+.app[data-bar-position="bottom"] .top-bar-item.is-active {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+/* left/right bars: fixed-width column, border and indicator on the inner
+   edge, gear pinned to the bottom */
+.app[data-bar-position="left"] .top-bar,
+.app[data-bar-position="right"] .top-bar {
+  height: auto;
+  width: var(--bar-width);
+  flex-direction: column;
+  justify-content: flex-start;
+  border-bottom: none;
+}
+
+.app[data-bar-position="left"] .top-bar {
+  border-right: 1px solid var(--border);
+}
+
+.app[data-bar-position="right"] .top-bar {
+  border-left: 1px solid var(--border);
+}
+
+.app[data-bar-position="left"] .top-bar-nav,
+.app[data-bar-position="right"] .top-bar-nav {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.app[data-bar-position="left"] .top-bar-item,
+.app[data-bar-position="right"] .top-bar-item {
+  padding: var(--sp-2) var(--sp-4);
+}
+
+.app[data-bar-position="left"] .top-bar-item.is-active {
+  box-shadow: inset -2px 0 0 var(--accent);
+}
+
+.app[data-bar-position="right"] .top-bar-item.is-active {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.app[data-bar-position="left"] .top-bar-settings,
+.app[data-bar-position="right"] .top-bar-settings {
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* labels hidden: vertical bars collapse to an icon-only rail */
+.app[data-labels="hidden"][data-bar-position="left"] .top-bar,
+.app[data-labels="hidden"][data-bar-position="right"] .top-bar {
+  width: var(--bar-width-collapsed);
+}
+
+.app[data-labels="hidden"][data-bar-position="left"] .top-bar-item,
+.app[data-labels="hidden"][data-bar-position="right"] .top-bar-item {
+  justify-content: center;
+  padding: var(--sp-2) 0;
+}
+
 /* ── modal ─────────────────────────────────────────────── */
 
 .modal-overlay {
@@ -95,6 +176,77 @@
 .modal-hint {
   font-size: var(--fs-sm);
   color: var(--fg-faint);
+}
+
+/* ── config modal ──────────────────────────────────────── */
+
+.modal-config {
+  width: min(720px, 90vw);
+}
+
+.config-body {
+  display: flex;
+  gap: var(--sp-4);
+  min-height: 260px;
+}
+
+.config-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  flex: none;
+  width: 140px;
+  border-right: 1px solid var(--border);
+  padding-right: var(--sp-3);
+}
+
+.config-sidebar-item {
+  text-align: left;
+  padding: 2px var(--sp-2);
+  border: 1px solid transparent;
+  color: var(--fg-dim);
+}
+
+.config-sidebar-item:hover {
+  color: var(--fg-bright);
+  border-color: var(--border);
+}
+
+.config-sidebar-item.is-active {
+  background: var(--bg-raised);
+  color: var(--fg-bright);
+}
+
+.config-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.config-field {
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.config-field legend {
+  color: var(--fg-dim);
+  margin-bottom: var(--sp-1);
+}
+
+.config-option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.config-option input {
+  accent-color: var(--accent);
 }
 
 .vault-list {

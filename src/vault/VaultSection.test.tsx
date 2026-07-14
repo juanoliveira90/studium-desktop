@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { VaultSettingsModal } from "./VaultSettingsModal";
+import { VaultSection } from "./VaultSection";
 import * as ipc from "./ipc";
 
 vi.mock("./ipc");
@@ -20,21 +20,21 @@ beforeEach(() => {
   vi.mocked(ipc.pickFolder).mockResolvedValue(null);
 });
 
-function renderModal(onClose = vi.fn()) {
+function renderSection(onClose = vi.fn()) {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   render(
     <QueryClientProvider client={qc}>
-      <VaultSettingsModal onClose={onClose} />
+      <VaultSection onClose={onClose} />
     </QueryClientProvider>,
   );
   return onClose;
 }
 
-describe("VaultSettingsModal", () => {
+describe("VaultSection", () => {
   it("lists the known vaults and marks the current one", async () => {
-    renderModal();
+    renderSection();
 
     expect(await screen.findByRole("button", { name: "/vaults/work" })).toBeInTheDocument();
     const current = await screen.findByRole("button", { name: /^\/vaults\/study/ });
@@ -43,7 +43,7 @@ describe("VaultSettingsModal", () => {
 
   it("switches to a vault on click and closes", async () => {
     const user = userEvent.setup();
-    const onClose = renderModal();
+    const onClose = renderSection();
 
     await user.click(await screen.findByRole("button", { name: "/vaults/work" }));
 
@@ -54,7 +54,7 @@ describe("VaultSettingsModal", () => {
   it("creates a new vault in a picked folder", async () => {
     const user = userEvent.setup();
     vi.mocked(ipc.pickFolder).mockResolvedValue("/vaults/new");
-    const onClose = renderModal();
+    const onClose = renderSection();
 
     await user.click(await screen.findByRole("button", { name: /new vault/ }));
 
@@ -65,7 +65,7 @@ describe("VaultSettingsModal", () => {
   it("opens an existing folder as a vault", async () => {
     const user = userEvent.setup();
     vi.mocked(ipc.pickFolder).mockResolvedValue("/vaults/elsewhere");
-    const onClose = renderModal();
+    const onClose = renderSection();
 
     await user.click(await screen.findByRole("button", { name: /open folder/ }));
 
@@ -75,7 +75,7 @@ describe("VaultSettingsModal", () => {
 
   it("does nothing when the folder picker is cancelled", async () => {
     const user = userEvent.setup();
-    renderModal();
+    renderSection();
 
     await user.click(await screen.findByRole("button", { name: /new vault/ }));
 
@@ -85,7 +85,7 @@ describe("VaultSettingsModal", () => {
 
   it("forgets a vault after confirming", async () => {
     const user = userEvent.setup();
-    renderModal();
+    renderSection();
 
     await user.click(await screen.findByRole("button", { name: "remove /vaults/work" }));
     await user.click(screen.getByRole("button", { name: /forget/ }));
@@ -96,7 +96,7 @@ describe("VaultSettingsModal", () => {
 
   it("deletes files from disk only after a second explicit click", async () => {
     const user = userEvent.setup();
-    renderModal();
+    renderSection();
 
     await user.click(await screen.findByRole("button", { name: "remove /vaults/work" }));
     await user.click(screen.getByRole("button", { name: "delete files" }));
@@ -109,7 +109,7 @@ describe("VaultSettingsModal", () => {
 
   it("cancel backs out of the confirm row", async () => {
     const user = userEvent.setup();
-    renderModal();
+    renderSection();
 
     await user.click(await screen.findByRole("button", { name: "remove /vaults/work" }));
     await user.click(screen.getByRole("button", { name: /cancel/ }));
@@ -118,24 +118,10 @@ describe("VaultSettingsModal", () => {
     expect(ipc.vaultForget).not.toHaveBeenCalled();
   });
 
-  it("closes on Escape and on overlay click, and focuses itself on mount", async () => {
-    const user = userEvent.setup();
-    const onClose = renderModal();
-
-    const dialog = await screen.findByRole("dialog");
-    await waitFor(() => expect(dialog).toHaveFocus());
-
-    await user.keyboard("{Escape}");
-    expect(onClose).toHaveBeenCalledTimes(1);
-
-    await user.click(screen.getByTestId("modal-overlay"));
-    expect(onClose).toHaveBeenCalledTimes(2);
-  });
-
   it("shows mutation errors", async () => {
     const user = userEvent.setup();
     vi.mocked(ipc.vaultForget).mockRejectedValue(new Error("config unwritable"));
-    renderModal();
+    renderSection();
 
     await user.click(await screen.findByRole("button", { name: "remove /vaults/work" }));
     await user.click(screen.getByRole("button", { name: /forget/ }));

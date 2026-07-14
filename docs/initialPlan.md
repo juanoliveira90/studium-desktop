@@ -27,7 +27,7 @@ Decisions made with the user:
 
 ## Vault design
 
-User picks/creates a vault directory on first run via the native folder picker (remembered in `~/.config/studium/config.toml`, which also keeps the list of every vault opened so far). The top bar's `⚙ vault` button opens a settings modal to create new vaults, switch between known ones, forget one (files stay on disk), or delete its files entirely (marker-validated, double-confirmed). Vault layout:
+User picks/creates a vault directory on first run via the native folder picker (remembered in `~/.config/studium/config.toml`, which also keeps the list of every vault opened so far). The top bar's gear `config` button opens the config modal, whose **vault** section creates new vaults, switches between known ones, forgets one (files stay on disk), or deletes its files entirely (marker-validated, double-confirmed). Vault layout:
 
 ```
 vault/
@@ -57,7 +57,7 @@ The app is **page-per-feature** — one full-window page per section, switched e
 
 - **Pages**: **home** (`alt+1` — logo/tagline, "today" subjects + tasks from the plans linked to today's events, "today's events" from the schedule, "up next" derived from the next upcoming block); **notes** (`alt+2` — search line, tag filter tabs `all/book/lecture/idea/personal`, note list with dates, `+ new note`); **study plan** (`alt+3` — plan list with thin progress bar + percentage, `+ new plan`); **weekly routine** (`alt+4` — the recurring weekly routine from `schedule.md`: all 24 hours as half-hour rows in a scroll viewport that wraps around the day endlessly (opens at 08:00), weekday columns, blocks colored by their linked plan; no week nav since the schedule is a repeating template, not dated weeks; click an empty cell to add a 1-hour event starting at that half-hour (Google Calendar style — prefilled form in a popover at the click), `+ new event` form below the grid, click a block to edit it in a popover beside the block, right-click → delete with confirm).
 - **Page chrome**: pages render their content only — no in-page title heading; the top bar names the active page and its tooltip shows the keybinding.
-- **Top bar**: a navigation bar docked at the top lists the pages as centered icon + label buttons (keybindings shown in the hover tooltip) and highlights the active one with an accent underline; the `⚙ vault` settings button sits pinned at its right edge. Items are clickable and `Alt+1..4` remains the fast path.
+- **Top bar**: a navigation bar (docked at the top by default; repositionable to bottom/left/right via config → customization, which can also hide the text labels for an icon-only bar) lists the pages as centered icon + label buttons (keybindings shown in the hover tooltip) and highlights the active one with an accent line on the page-facing edge; the gear `config` button sits pinned at its far edge and opens the config modal (sidebar sections: vault, customization; customization choices persist in localStorage). Items are clickable and `Alt+1..4` remains the fast path.
 - **Visual language**: monospace font throughout, sharp corners, 1px borders, text-only tabs (active = filled block), unicode checkboxes (`☑/☐`), thin line progress bars, Solarized Light base with a warm brown accent by default (must derive entirely from the CSS variable theme layer so pywal retints everything).
 
 Data-model implications from the reference:

@@ -7,6 +7,7 @@ import * as ipc from "./vault/ipc";
 vi.mock("./vault/ipc");
 
 beforeEach(() => {
+  localStorage.clear();
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.docList).mockResolvedValue([]);
@@ -60,17 +61,53 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("opens the vault settings modal from the top bar and closes it on Escape", async () => {
+  it("opens the config modal from the top bar and closes it on Escape", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "vault settings" }));
-    const dialog = await screen.findByRole("dialog", { name: "vault settings" });
+    await user.click(screen.getByRole("button", { name: "config" }));
+    const dialog = await screen.findByRole("dialog", { name: "config" });
     await waitFor(() => expect(dialog).toHaveFocus());
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("defaults to a top bar with labels shown", () => {
+    const { container } = render(<App />);
+
+    const app = container.querySelector(".app")!;
+    expect(app).toHaveAttribute("data-bar-position", "top");
+    expect(app).toHaveAttribute("data-labels", "shown");
+  });
+
+  it("applies a persisted bar position on startup", () => {
+    localStorage.setItem("studium.ui.barPosition", "left");
+    const { container } = render(<App />);
+
+    expect(container.querySelector(".app")).toHaveAttribute(
+      "data-bar-position",
+      "left",
+    );
+  });
+
+  it("repositions the bar and hides labels from the customization section", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    const app = container.querySelector(".app")!;
+
+    await user.click(screen.getByRole("button", { name: "config" }));
+    await user.click(screen.getByRole("button", { name: "customization" }));
+
+    await user.click(screen.getByRole("radio", { name: "bottom" }));
+    expect(app).toHaveAttribute("data-bar-position", "bottom");
+    expect(localStorage.getItem("studium.ui.barPosition")).toBe("bottom");
+
+    await user.click(screen.getByRole("checkbox", { name: "show labels" }));
+    expect(app).toHaveAttribute("data-labels", "hidden");
+    expect(container.querySelectorAll(".top-bar-label")).toHaveLength(0);
+    expect(localStorage.getItem("studium.ui.showLabels")).toBe("false");
   });
 });

@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TopBar } from "./TopBar";
 import { SettingsContext } from "./settingsContext";
+import { UiSettingsContext, type UiSettings } from "../config/uiSettings";
 import { PAGES } from "../pages/pages";
 
 function renderBar(overrides: Partial<Parameters<typeof TopBar>[0]> = {}) {
@@ -48,7 +49,7 @@ describe("TopBar", () => {
     expect(onSelect).toHaveBeenCalledWith("notes");
   });
 
-  it("opens vault settings from the gear button", async () => {
+  it("opens the config modal from the gear button", async () => {
     const user = userEvent.setup();
     const openSettings = vi.fn();
     render(
@@ -57,8 +58,39 @@ describe("TopBar", () => {
       </SettingsContext.Provider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "vault settings" }));
+    await user.click(screen.getByRole("button", { name: "config" }));
 
     expect(openSettings).toHaveBeenCalled();
+  });
+
+  it("shows text labels next to the icons by default", () => {
+    const { container } = renderBar();
+
+    const labels = [...container.querySelectorAll(".top-bar-label")];
+    expect(labels.map((l) => l.textContent)).toEqual([
+      "home",
+      "notes",
+      "study plan",
+      "weekly routine",
+      "config",
+    ]);
+  });
+
+  it("hides text labels when the setting is off, keeping accessible names", () => {
+    const ui: UiSettings = {
+      barPosition: "top",
+      setBarPosition: () => {},
+      showLabels: false,
+      setShowLabels: () => {},
+    };
+    const { container } = render(
+      <UiSettingsContext.Provider value={ui}>
+        <TopBar pages={PAGES} activeId="home" onSelect={() => {}} />
+      </UiSettingsContext.Provider>,
+    );
+
+    expect(container.querySelectorAll(".top-bar-label")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: "study plan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "config" })).toBeInTheDocument();
   });
 });

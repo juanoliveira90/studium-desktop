@@ -13,9 +13,10 @@ src/                    React frontend
   styles/tokens.css     theme API — every color/font/spacing as CSS vars; themes override only these
   styles/base.css       reset + global element styles
   styles/app.css        all layout/page styling
-  components/           shared chrome (Page, TopBar — page icons + vault-settings gear, icons.tsx SVG set) + ContextMenu (right-click delete menu) / useContextMenu + AddRow ("+ new <thing>" row)
+  components/           shared chrome (Page, TopBar — page icons + config gear, icons.tsx SVG set) + ContextMenu (right-click delete menu) / useContextMenu + AddRow ("+ new <thing>" row)
   keyboard/             keymap combo matching + useKeymap window listener (seed of the command registry)
-  vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSettingsModal (vault switcher, opened from the top bar)
+  config/               config modal (sidebar sections: vault, customization) + uiSettings — bar position (top/bottom/left/right, via data-bar-position on .app) and show-labels toggle, persisted in localStorage
+  vault/                ipc.ts — typed invoke layer (the only module importing Tauri APIs, incl. the plugin-dialog folder picker) + useVault open/create/known-list/forget/delete hooks + shared VaultGate + VaultSection (vault switcher inside the config modal)
   notes/                notes module: note.ts domain model + fuzzy finder, useNotes query/mutation hooks, CodeMirror Editor + livePreview.ts (Obsidian-style live preview decorations; Ctrl+E / header button toggles live↔raw, persisted in localStorage)
   schedule/             schedule module: block.ts domain model (schedule.md entries → grid placement, plan colors) + useSchedule hook
   plans/                plans module: plan.ts domain model (plans/ tree → plans/subjects/subtasks, progress) + usePlans query/mutation hooks + SubjectChecklist (toggle/delete task checklist, minimizable via its heading — persisted in localStorage, shared with home)

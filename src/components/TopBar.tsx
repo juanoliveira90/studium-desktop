@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import type { PageDef, PageId } from "../pages/pages";
 import { SettingsContext } from "./settingsContext";
+import { useUiSettings } from "../config/uiSettings";
 import { GearIcon } from "./icons";
 
 interface TopBarProps {
@@ -11,6 +12,7 @@ interface TopBarProps {
 
 export function TopBar({ pages, activeId, onSelect }: TopBarProps) {
   const openSettings = useContext(SettingsContext);
+  const { showLabels } = useUiSettings();
 
   return (
     <header className="top-bar">
@@ -20,22 +22,23 @@ export function TopBar({ pages, activeId, onSelect }: TopBarProps) {
             key={p.id}
             className={`top-bar-item${p.id === activeId ? " is-active" : ""}`}
             aria-current={p.id === activeId ? "page" : undefined}
+            aria-label={p.title}
             title={`${p.title} (${p.combo})`}
             onClick={() => onSelect(p.id)}
           >
             <p.Icon />
-            <span className="top-bar-label">{p.title}</span>
+            {showLabels && <span className="top-bar-label">{p.title}</span>}
           </button>
         ))}
       </nav>
       <button
         className="top-bar-item top-bar-settings"
-        aria-label="vault settings"
-        title="vault settings"
+        aria-label="config"
+        title="config"
         onClick={openSettings}
       >
         <GearIcon />
-        <span className="top-bar-label">vault</span>
+        {showLabels && <span className="top-bar-label">config</span>}
       </button>
     </header>
   );
