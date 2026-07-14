@@ -36,11 +36,15 @@ describe("useThemeSettingsState", () => {
     expect(screen.getByTestId("theme-id")).toHaveTextContent("gruvbox-dark");
   });
 
-  it("accepts pywal as a persisted source", () => {
+  it("accepts pywal and base16 as persisted sources", () => {
     localStorage.setItem("studium.ui.theme", "pywal");
-    render(<Probe />);
-
+    const { unmount } = render(<Probe />);
     expect(screen.getByTestId("theme-id")).toHaveTextContent("pywal");
+    unmount();
+
+    localStorage.setItem("studium.ui.theme", "base16");
+    render(<Probe />);
+    expect(screen.getByTestId("theme-id")).toHaveTextContent("base16");
   });
 
   it("falls back to the default on an unknown stored theme", () => {

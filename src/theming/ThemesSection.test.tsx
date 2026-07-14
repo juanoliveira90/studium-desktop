@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemesSection } from "./ThemesSection";
@@ -68,6 +68,49 @@ describe("ThemesSection", () => {
     await user.click(screen.getByRole("radio", { name: "pywal" }));
 
     expect(theme.setThemeId).toHaveBeenCalledWith("pywal");
+  });
+
+  it("offers base16 with a scheme path input when selected", async () => {
+    vi.mocked(ipc.configGetBase16Path).mockResolvedValue(
+      "/home/u/scheme.yaml",
+    );
+    vi.mocked(ipc.themeReadBase16).mockResolvedValue({ palette: [] });
+    renderSection({ themeId: "base16" });
+
+    expect(screen.getByRole("radio", { name: "base16" })).toBeChecked();
+    // The field mounts empty and re-keys once the configured path loads.
+    await waitFor(() =>
+      expect(
+        screen.getByRole("textbox", { name: "base16 yaml path" }),
+      ).toHaveValue("/home/u/scheme.yaml"),
+    );
+  });
+
+  it("saves the base16 path on Enter", async () => {
+    vi.mocked(ipc.configGetBase16Path).mockResolvedValue(null);
+    vi.mocked(ipc.configSetBase16Path).mockResolvedValue(undefined);
+    vi.mocked(ipc.themeReadBase16).mockResolvedValue({ palette: [] });
+    const user = userEvent.setup();
+    renderSection({ themeId: "base16" });
+
+    const input = await screen.findByRole("textbox", {
+      name: "base16 yaml path",
+    });
+    await user.type(input, "/tmp/scheme.yaml{Enter}");
+
+    expect(ipc.configSetBase16Path).toHaveBeenCalledWith("/tmp/scheme.yaml");
+  });
+
+  it("shows the base16 read error inline when selected but broken", async () => {
+    vi.mocked(ipc.configGetBase16Path).mockResolvedValue(null);
+    vi.mocked(ipc.themeReadBase16).mockRejectedValue(
+      new Error("no base16 file configured"),
+    );
+    renderSection({ themeId: "base16" });
+
+    expect(
+      await screen.findByText(/no base16 file configured/),
+    ).toBeInTheDocument();
   });
 
   it("shows the pywal read error inline when pywal is selected but broken", async () => {

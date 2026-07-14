@@ -258,6 +258,21 @@
   accent-color: var(--accent);
 }
 
+/* base16 scheme path (themes section); long paths scroll inside the field */
+.config-path-input {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: var(--sp-1) var(--sp-2);
+  margin-left: calc(13px + var(--sp-2)); /* under its radio's label text */
+}
+
+.config-path-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
 .vault-list {
   list-style: none;
   display: flex;

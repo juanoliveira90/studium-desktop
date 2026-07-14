@@ -10,15 +10,15 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 
 use crate::config::AppConfig;
-use crate::theme::{self, PywalPalette, ThemeWatcher};
+use crate::theme::{self, Base16Palette, PywalPalette, ThemeWatcher};
 use crate::vault::{Document, Vault, VaultWatcher};
 
 /// Event emitted to the frontend whenever files in the open vault change.
 /// Payload: `{ paths: string[] }` with vault-relative paths.
 pub const VAULT_CHANGED_EVENT: &str = "vault:changed";
 
-/// Event emitted when a theme source file (pywal's colors.json) changes.
-/// Payload: `{ source: "pywal" }`.
+/// Event emitted when a theme source file (pywal's colors.json or the
+/// configured base16 yaml) changes. Payload: `{ source: "pywal" | "base16" }`.
 pub const THEME_CHANGED_EVENT: &str = "theme:changed";
 
 #[derive(Default)]
@@ -64,6 +64,7 @@ struct VaultChangedPayload {
 #[derive(Default)]
 pub struct ThemeWatchState {
     pywal: Mutex<Option<ThemeWatcher>>,
+    base16: Mutex<Option<ThemeWatcher>>,
 }
 
 #[derive(Serialize, Clone)]
@@ -310,23 +311,99 @@ pub fn theme_read_pywal(
 /// Starts the pywal watcher once per app run. Best-effort: with no
 /// ~/.cache/wal yet there is nothing to watch, and the read that follows
 /// reports the real problem.
-fn ensure_pywal_watcher(app: &AppHandle, watch: &State<'_, ThemeWatchState>, path: &Path) {
+fn ensure_pywal_watcher(app: &AppHandle, watch: &ThemeWatchState, path: &Path) {
     let Ok(mut guard) = watch.pywal.lock() else {
         return;
     };
     if guard.is_some() {
         return;
     }
+    *guard = start_source_watcher(app, "pywal", path);
+}
+
+/// The configured base16 scheme, read from the path in the app config.
+/// Also makes sure that file is being watched for live retints.
+#[tauri::command]
+pub fn theme_read_base16(
+    app: AppHandle,
+    watch: State<'_, ThemeWatchState>,
+) -> Result<Base16Palette, String> {
+    let dir = AppConfig::default_dir().ok_or("no config directory on this system")?;
+    let cfg = AppConfig::load_from(&dir).map_err(|e| e.to_string())?;
+    let path = cfg
+        .base16_path
+        .ok_or("no base16 file configured — set one in config → themes")?;
+    ensure_base16_watcher(&app, &watch, &path);
+    theme::read_base16(&path).map_err(|e| e.to_string())
+}
+
+/// The base16 scheme path from the app config, if set.
+#[tauri::command]
+pub fn config_get_base16_path() -> Option<PathBuf> {
+    let dir = AppConfig::default_dir()?;
+    AppConfig::load_from(&dir).ok()?.base16_path
+}
+
+/// Sets (or clears, with None) the base16 scheme path and rewires its
+/// watcher to the new file.
+#[tauri::command]
+pub fn config_set_base16_path(
+    app: AppHandle,
+    watch: State<'_, ThemeWatchState>,
+    path: Option<PathBuf>,
+) -> Result<(), String> {
+    let dir = AppConfig::default_dir().ok_or("no config directory on this system")?;
+    let mut cfg = AppConfig::load_from(&dir).unwrap_or_default();
+    cfg.base16_path = path.clone();
+    cfg.save_to(&dir).map_err(|e| e.to_string())?;
+
+    let Ok(mut guard) = watch.base16.lock() else {
+        return Ok(());
+    };
+    *guard = match &path {
+        Some(new_path) => start_source_watcher(&app, "base16", new_path),
+        None => None,
+    };
+    Ok(())
+}
+
+/// Starts the base16 watcher if it isn't running yet (the set-path command
+/// replaces it outright instead).
+fn ensure_base16_watcher(app: &AppHandle, watch: &ThemeWatchState, path: &Path) {
+    let Ok(mut guard) = watch.base16.lock() else {
+        return;
+    };
+    if guard.is_some() {
+        return;
+    }
+    *guard = start_source_watcher(app, "base16", path);
+}
+
+/// Starts the base16 watcher at app launch when the config already has a
+/// path, so a scheme edit retints even before the themes section is opened.
+pub fn start_base16_watcher_if_configured(app: &AppHandle, watch: &ThemeWatchState) {
+    let Some(dir) = AppConfig::default_dir() else {
+        return;
+    };
+    let cfg = AppConfig::load_from(&dir).unwrap_or_default();
+    let Some(path) = cfg.base16_path else {
+        return;
+    };
+    ensure_base16_watcher(app, watch, &path);
+}
+
+/// A watcher on one theme source file that re-emits `theme:changed` with
+/// `source`. Best-effort: None when the file's directory can't be watched.
+fn start_source_watcher(app: &AppHandle, source: &str, path: &Path) -> Option<ThemeWatcher> {
     let emitter = app.clone();
+    let source = source.to_string();
     let started = ThemeWatcher::start(path, move || {
         let payload = ThemeChangedPayload {
-            source: "pywal".to_string(),
+            source: source.clone(),
         };
         let _ = emitter.emit(THEME_CHANGED_EVENT, payload);
     });
-    if let Ok(watcher) = started {
-        *guard = Some(watcher);
-    }
+    started.ok()
 }
 
 /// A JSON frontmatter object from the webview as the YAML mapping the vault

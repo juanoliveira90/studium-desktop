@@ -19,6 +19,10 @@ pub struct AppConfig {
     /// (which only had `vault_path`) loading unchanged.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub vaults: Vec<PathBuf>,
+    /// A base16 scheme yaml to use as the "base16" theme source; read and
+    /// watched like pywal's colors.json.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base16_path: Option<PathBuf>,
 }
 
 impl AppConfig {

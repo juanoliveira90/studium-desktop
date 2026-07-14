@@ -20,7 +20,7 @@ const SNIPPETS_KEY = "studium.ui.themeSnippets";
 const DEFAULT_THEME_ID = BUILTIN_THEMES[0].id;
 
 /** Selectable non-builtin sources (live palettes read by Rust). */
-export const THEME_SOURCES = ["pywal"] as const;
+export const THEME_SOURCES = ["pywal", "base16"] as const;
 
 function isKnownThemeId(id: string | null): id is string {
   const isBuiltin = BUILTIN_THEMES.some((theme) => theme.id === id);

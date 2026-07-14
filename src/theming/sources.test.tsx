@@ -75,6 +75,28 @@ describe("ThemeVarsLayer", () => {
     expect(varsText()).toBe("");
   });
 
+  it("fetches, maps and applies the base16 palette when selected", async () => {
+    vi.mocked(ipc.themeReadBase16).mockResolvedValue({
+      palette: Array.from({ length: 16 }, (_, i) => `#22222${i.toString(16)}`),
+    });
+
+    renderLayer("base16");
+
+    await waitFor(() => expect(varsText()).toContain("--bg: #222220;"));
+    expect(ipc.themeReadPywal).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the default theme when base16 cannot be read", async () => {
+    vi.mocked(ipc.themeReadBase16).mockRejectedValue(
+      new Error("no base16 file configured"),
+    );
+
+    renderLayer("base16");
+
+    await waitFor(() => expect(ipc.themeReadBase16).toHaveBeenCalled());
+    expect(varsText()).toBe("");
+  });
+
   it("refetches and retints when the theme source changes on disk", async () => {
     let onChange: ((source: string) => void) | undefined;
     vi.mocked(ipc.onThemeChanged).mockImplementation((cb) => {

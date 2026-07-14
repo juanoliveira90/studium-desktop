@@ -3,6 +3,8 @@ pub mod config;
 pub mod theme;
 pub mod vault;
 
+use tauri::Manager;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -10,6 +12,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(commands::VaultState::default())
         .manage(commands::ThemeWatchState::default())
+        .setup(|app| {
+            let watch = app.state::<commands::ThemeWatchState>();
+            commands::start_base16_watcher_if_configured(app.handle(), &watch);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::vault_default_path,
             commands::vault_create,
@@ -28,6 +35,9 @@ pub fn run() {
             commands::theme_list_snippets,
             commands::theme_read_snippet,
             commands::theme_read_pywal,
+            commands::theme_read_base16,
+            commands::config_get_base16_path,
+            commands::config_set_base16_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

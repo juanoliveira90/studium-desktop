@@ -670,6 +670,28 @@ fn app_config_save_load_round_trip() {
     assert_eq!(loaded.vault_path.as_deref(), Some(Path::new("/home/juan/vault")));
 }
 
+#[test]
+fn app_config_base16_path_round_trips_and_stays_optional() {
+    let dir = tempfile::tempdir().unwrap();
+    let cfg = AppConfig {
+        base16_path: Some("/home/juan/.config/base16/theme.yaml".into()),
+        ..Default::default()
+    };
+    cfg.save_to(dir.path()).unwrap();
+    let loaded = AppConfig::load_from(dir.path()).unwrap();
+    assert_eq!(
+        loaded.base16_path.as_deref(),
+        Some(Path::new("/home/juan/.config/base16/theme.yaml"))
+    );
+
+    // A config saved without the field serializes nothing for it and loads.
+    let bare = AppConfig::default();
+    bare.save_to(dir.path()).unwrap();
+    let raw = fs::read_to_string(dir.path().join("config.toml")).unwrap();
+    assert!(!raw.contains("base16_path"));
+    assert!(AppConfig::load_from(dir.path()).unwrap().base16_path.is_none());
+}
+
 // -------------------------------------------------- config: known vaults
 
 #[test]
@@ -704,6 +726,7 @@ fn config_known_vaults_merges_legacy_current_without_duplicating() {
     let cfg = AppConfig {
         vault_path: Some("/b".into()),
         vaults: vec!["/a".into(), "/b".into()],
+        ..Default::default()
     };
     assert_eq!(
         cfg.known_vaults(),
@@ -713,6 +736,7 @@ fn config_known_vaults_merges_legacy_current_without_duplicating() {
     let legacy_only = AppConfig {
         vault_path: Some("/c".into()),
         vaults: vec!["/a".into()],
+        ..Default::default()
     };
     assert_eq!(
         legacy_only.known_vaults(),
