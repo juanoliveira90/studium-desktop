@@ -9,7 +9,11 @@ function Probe() {
   return (
     <div>
       <p data-testid="theme-id">{theme.themeId}</p>
+      <p data-testid="snippets">{theme.enabledSnippets.join(",")}</p>
       <button onClick={() => theme.setThemeId("nord")}>pick nord</button>
+      <button onClick={() => theme.toggleSnippet("mine.css")}>
+        toggle mine
+      </button>
     </div>
   );
 }
@@ -41,6 +45,38 @@ describe("useThemeSettingsState", () => {
     render(<Probe />);
 
     expect(screen.getByTestId("theme-id")).toHaveTextContent("solarized-light");
+  });
+
+  it("defaults to no enabled snippets and survives garbage stored JSON", () => {
+    localStorage.setItem("studium.ui.themeSnippets", "not json [");
+    render(<Probe />);
+
+    expect(screen.getByTestId("snippets")).toHaveTextContent("");
+  });
+
+  it("reads persisted enabled snippets, keeping only string entries", () => {
+    localStorage.setItem(
+      "studium.ui.themeSnippets",
+      JSON.stringify(["a.css", 7, "b.css"]),
+    );
+    render(<Probe />);
+
+    expect(screen.getByTestId("snippets")).toHaveTextContent("a.css,b.css");
+  });
+
+  it("toggleSnippet enables, persists, then disables", async () => {
+    const user = userEvent.setup();
+    render(<Probe />);
+
+    await user.click(screen.getByRole("button", { name: "toggle mine" }));
+    expect(screen.getByTestId("snippets")).toHaveTextContent("mine.css");
+    expect(localStorage.getItem("studium.ui.themeSnippets")).toBe(
+      JSON.stringify(["mine.css"]),
+    );
+
+    await user.click(screen.getByRole("button", { name: "toggle mine" }));
+    expect(screen.getByTestId("snippets")).toHaveTextContent(/^$/);
+    expect(localStorage.getItem("studium.ui.themeSnippets")).toBe("[]");
   });
 
   it("setter persists, updates state and retints", async () => {

@@ -11,6 +11,7 @@ import {
   ThemeSettingsContext,
   useThemeSettingsState,
 } from "./theming/themeSettings";
+import { ThemeSnippetLayer } from "./theming/snippets";
 
 function App() {
   const [active, setActive] = useState<PageId>("home");
@@ -22,11 +23,18 @@ function App() {
   );
 
   // Hand-edits picked up by the vault watcher refresh every doc query, so
-  // changes made in vim/Obsidian appear live.
+  // changes made in vim/Obsidian appear live. Edits under .studium/themes/
+  // refresh the theme snippet queries instead.
   useEffect(
     () =>
-      onVaultChanged(() => {
+      onVaultChanged((paths) => {
         queryClient.invalidateQueries({ queryKey: ["docs"] });
+        const touchesThemes = paths.some((p) =>
+          p.startsWith(".studium/themes/"),
+        );
+        if (touchesThemes) {
+          queryClient.invalidateQueries({ queryKey: ["theme"] });
+        }
       }),
     [queryClient],
   );
@@ -52,6 +60,7 @@ function App() {
       <SettingsContext.Provider value={() => setSettingsOpen(true)}>
         <UiSettingsContext.Provider value={ui}>
           <ThemeSettingsContext.Provider value={theme}>
+            <ThemeSnippetLayer />
             <div
               className="app"
               data-bar-position={ui.barPosition}

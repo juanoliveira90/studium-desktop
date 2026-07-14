@@ -10,6 +10,7 @@ use super::error::VaultError;
 use super::frontmatter::Document;
 
 const MARKER_DIR: &str = ".studium";
+const THEMES_DIR: &str = ".studium/themes";
 
 const DEFAULT_VAULT_CONFIG: &str = "\
 # studium vault-local settings (theme, keybind overrides)
@@ -136,6 +137,48 @@ impl Vault {
             fs::remove_file(&path)
         };
         removal.map_err(|e| VaultError::io(&path, e))
+    }
+
+    /// The `.css` files in `.studium/themes/` (user theme snippets) as
+    /// sorted file names. A vault without the directory has no snippets.
+    pub fn list_theme_snippets(&self) -> Result<Vec<String>, VaultError> {
+        let dir = self.root.join(THEMES_DIR);
+        let mut names = Vec::new();
+        if !dir.is_dir() {
+            return Ok(names);
+        }
+        let entries = fs::read_dir(&dir).map_err(|e| VaultError::io(&dir, e))?;
+        for entry in entries {
+            let entry = entry.map_err(|e| VaultError::io(&dir, e))?;
+            let path = entry.path();
+            let is_css_file = path.is_file() && path.extension().is_some_and(|ext| ext == "css");
+            if !is_css_file {
+                continue;
+            }
+            if let Some(name) = path.file_name() {
+                names.push(name.to_string_lossy().into_owned());
+            }
+        }
+        names.sort();
+        Ok(names)
+    }
+
+    /// The contents of one snippet by file name. Only a plain `<name>.css`
+    /// inside `.studium/themes/` is accepted — separators and `..` are
+    /// rejected before touching the filesystem, like every vault path.
+    pub fn read_theme_snippet(&self, name: &str) -> Result<String, VaultError> {
+        let name_path = Path::new(name);
+        let mut components = name_path.components();
+        let is_plain_name = matches!(components.next(), Some(Component::Normal(_)))
+            && components.next().is_none();
+        let is_css = name_path.extension().is_some_and(|ext| ext == "css");
+        if !is_plain_name || !is_css {
+            return Err(VaultError::InvalidPath {
+                path: name.to_string(),
+            });
+        }
+        let path = self.root.join(THEMES_DIR).join(name_path);
+        fs::read_to_string(&path).map_err(|e| VaultError::io(&path, e))
     }
 
     fn resolve(&self, rel: &str) -> Result<PathBuf, VaultError> {

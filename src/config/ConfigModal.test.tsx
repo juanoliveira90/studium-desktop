@@ -4,14 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConfigModal } from "./ConfigModal";
 import * as ipc from "../vault/ipc";
+import * as themeIpc from "../theming/ipc";
 
 vi.mock("../vault/ipc");
+vi.mock("../theming/ipc");
 
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vaults/study");
   vi.mocked(ipc.vaultListKnown).mockResolvedValue(["/vaults/study"]);
+  vi.mocked(themeIpc.themeListSnippets).mockResolvedValue([]);
 });
 
 function renderModal(onClose = vi.fn()) {

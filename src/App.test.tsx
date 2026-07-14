@@ -3,11 +3,14 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import * as ipc from "./vault/ipc";
+import * as themeIpc from "./theming/ipc";
 
 vi.mock("./vault/ipc");
+vi.mock("./theming/ipc");
 
 beforeEach(() => {
   localStorage.clear();
+  vi.mocked(themeIpc.themeListSnippets).mockResolvedValue([]);
   vi.mocked(ipc.vaultDefaultPath).mockResolvedValue("/vault");
   vi.mocked(ipc.vaultOpen).mockResolvedValue({ root: "/vault" });
   vi.mocked(ipc.docList).mockResolvedValue([]);

@@ -264,6 +264,77 @@ fn list_skips_hidden_directories() {
     assert_eq!(vault.list("").unwrap(), vec!["schedule.md"]);
 }
 
+// ---------------------------------------------------------- theme snippets
+
+#[test]
+fn list_theme_snippets_returns_css_sorted() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    let themes = vault.root().join(".studium/themes");
+    fs::write(themes.join("zz.css"), "z").unwrap();
+    fs::write(themes.join("aa.css"), "a").unwrap();
+    fs::write(themes.join("readme.txt"), "not css").unwrap();
+    fs::create_dir(themes.join("subdir.css")).unwrap();
+
+    assert_eq!(vault.list_theme_snippets().unwrap(), vec!["aa.css", "zz.css"]);
+}
+
+#[test]
+fn list_theme_snippets_empty_or_missing_dir_is_empty() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    assert_eq!(vault.list_theme_snippets().unwrap(), Vec::<String>::new());
+
+    fs::remove_dir_all(vault.root().join(".studium/themes")).unwrap();
+    assert_eq!(vault.list_theme_snippets().unwrap(), Vec::<String>::new());
+}
+
+#[test]
+fn read_theme_snippet_returns_exact_contents() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    let css = ":root { --accent: hotpink; }\n";
+    fs::write(vault.root().join(".studium/themes/mine.css"), css).unwrap();
+
+    assert_eq!(vault.read_theme_snippet("mine.css").unwrap(), css);
+}
+
+#[test]
+fn read_theme_snippet_rejects_traversal_and_non_css() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    fs::write(vault.root().join("schedule.md"), "secret").unwrap();
+
+    for bad in [
+        "../schedule.md",
+        "../../etc/passwd.css",
+        "/etc/passwd.css",
+        "sub/dir.css",
+        "notes.md",
+        "plain",
+        "",
+        "..",
+    ] {
+        assert!(
+            matches!(
+                vault.read_theme_snippet(bad),
+                Err(VaultError::InvalidPath { .. })
+            ),
+            "expected InvalidPath for {bad:?}"
+        );
+    }
+}
+
+#[test]
+fn read_theme_snippet_missing_file_is_io_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = Vault::create(dir.path().join("v")).unwrap();
+    assert!(matches!(
+        vault.read_theme_snippet("ghost.css"),
+        Err(VaultError::Io { .. })
+    ));
+}
+
 #[test]
 fn read_write_round_trip_via_vault() {
     let dir = tempfile::tempdir().unwrap();

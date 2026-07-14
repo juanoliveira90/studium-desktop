@@ -38,6 +38,7 @@ export function useOpenVault() {
       qc.setQueryData(["vault"], root);
       qc.invalidateQueries({ queryKey: ["vaults"] });
       qc.invalidateQueries({ queryKey: ["docs"] });
+      qc.invalidateQueries({ queryKey: ["theme"] });
     },
   });
 }
@@ -60,6 +61,7 @@ function useRemoveVault(remove: (path: string) => Promise<string[]>) {
       qc.setQueryData(["vaults"], list);
       qc.invalidateQueries({ queryKey: ["vault"] });
       qc.invalidateQueries({ queryKey: ["docs"] });
+      qc.invalidateQueries({ queryKey: ["theme"] });
     },
   });
 }

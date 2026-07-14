@@ -23,6 +23,8 @@ pub fn run() {
             commands::schedule_add,
             commands::schedule_update,
             commands::schedule_delete,
+            commands::theme_list_snippets,
+            commands::theme_read_snippet,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

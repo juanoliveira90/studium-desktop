@@ -261,6 +261,23 @@ pub fn schedule_delete(state: State<'_, VaultState>, index: usize) -> Result<(),
     })
 }
 
+/// User theme snippets: the `.css` file names in `.studium/themes/`.
+#[tauri::command]
+pub fn theme_list_snippets(state: State<'_, VaultState>) -> Result<Vec<String>, String> {
+    with_vault(&state, |vault| {
+        vault.list_theme_snippets().map_err(|e| e.to_string())
+    })
+}
+
+/// The contents of one snippet, for injection as a <style> in the webview
+/// (the webview has no filesystem access of its own).
+#[tauri::command]
+pub fn theme_read_snippet(state: State<'_, VaultState>, name: String) -> Result<String, String> {
+    with_vault(&state, |vault| {
+        vault.read_theme_snippet(&name).map_err(|e| e.to_string())
+    })
+}
+
 /// A JSON frontmatter object from the webview as the YAML mapping the vault
 /// core writes. Null counts as empty; anything else isn't frontmatter.
 fn json_to_mapping(frontmatter: &serde_json::Value) -> Result<serde_yaml::Mapping, String> {
