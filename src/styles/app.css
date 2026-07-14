@@ -52,8 +52,15 @@
 }
 
 .top-bar-item .icon {
+  flex: none;
   width: 18px;
   height: 18px;
+}
+
+/* labels must never wrap: a wrapped line re-centers and breaks the
+   left alignment of the column */
+.top-bar-label {
+  white-space: nowrap;
 }
 
 .top-bar-item:hover {
@@ -190,18 +197,20 @@
   min-height: 260px;
 }
 
+/* no fixed width: the column sizes to its widest item so every label
+   stays inside its highlight */
 .config-sidebar {
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
   flex: none;
-  width: 140px;
   border-right: 1px solid var(--border);
   padding-right: var(--sp-3);
 }
 
 .config-sidebar-item {
   text-align: left;
+  white-space: nowrap;
   padding: 2px var(--sp-2);
   border: 1px solid transparent;
   color: var(--fg-dim);

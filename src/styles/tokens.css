@@ -57,6 +57,6 @@
 
   /* chrome */
   --bar-height: 42px;
-  --bar-width: 150px; /* vertical bar with labels */
+  --bar-width: 200px; /* vertical bar: fits the longest label ("weekly routine") unwrapped */
   --bar-width-collapsed: var(--bar-height); /* icon-only vertical rail */
 }
