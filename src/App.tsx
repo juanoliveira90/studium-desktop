@@ -7,11 +7,16 @@ import { PAGES, type PageId } from "./pages/pages";
 import { onVaultChanged } from "./vault/ipc";
 import { ConfigModal } from "./config/ConfigModal";
 import { UiSettingsContext, useUiSettingsState } from "./config/uiSettings";
+import {
+  ThemeSettingsContext,
+  useThemeSettingsState,
+} from "./theming/themeSettings";
 
 function App() {
   const [active, setActive] = useState<PageId>("home");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const ui = useUiSettingsState();
+  const theme = useThemeSettingsState();
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );
@@ -46,17 +51,21 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <SettingsContext.Provider value={() => setSettingsOpen(true)}>
         <UiSettingsContext.Provider value={ui}>
-          <div
-            className="app"
-            data-bar-position={ui.barPosition}
-            data-labels={ui.showLabels ? "shown" : "hidden"}
-          >
-            <TopBar pages={PAGES} activeId={active} onSelect={setActive} />
-            <main className="page-container">
-              <Component />
-            </main>
-          </div>
-          {settingsOpen && <ConfigModal onClose={() => setSettingsOpen(false)} />}
+          <ThemeSettingsContext.Provider value={theme}>
+            <div
+              className="app"
+              data-bar-position={ui.barPosition}
+              data-labels={ui.showLabels ? "shown" : "hidden"}
+            >
+              <TopBar pages={PAGES} activeId={active} onSelect={setActive} />
+              <main className="page-container">
+                <Component />
+              </main>
+            </div>
+            {settingsOpen && (
+              <ConfigModal onClose={() => setSettingsOpen(false)} />
+            )}
+          </ThemeSettingsContext.Provider>
         </UiSettingsContext.Provider>
       </SettingsContext.Provider>
     </QueryClientProvider>

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { VaultSection } from "../vault/VaultSection";
 import { CustomizationSection } from "./CustomizationSection";
+import { ThemesSection } from "../theming/ThemesSection";
 
-const SECTIONS = ["vault", "customization"] as const;
+const SECTIONS = ["vault", "customization", "themes"] as const;
 type Section = (typeof SECTIONS)[number];
 
-/** App configuration overlay: a sidebar of sections (vault, customization). */
+/** App configuration overlay: a sidebar of sections (vault, customization, themes). */
 export function ConfigModal({ onClose }: { onClose: () => void }) {
   const [section, setSection] = useState<Section>("vault");
 
@@ -45,8 +46,10 @@ export function ConfigModal({ onClose }: { onClose: () => void }) {
           <div className="config-content">
             {section === "vault" ? (
               <VaultSection onClose={onClose} />
-            ) : (
+            ) : section === "customization" ? (
               <CustomizationSection />
+            ) : (
+              <ThemesSection />
             )}
           </div>
         </div>

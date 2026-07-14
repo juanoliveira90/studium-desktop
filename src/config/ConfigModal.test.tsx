@@ -63,6 +63,22 @@ describe("ConfigModal", () => {
     expect(await screen.findByRole("button", { name: /^\/vaults\/study/ })).toBeInTheDocument();
   });
 
+  it("switches to the themes section from the sidebar", async () => {
+    const user = userEvent.setup();
+    renderModal();
+
+    await user.click(screen.getByRole("button", { name: "themes" }));
+
+    expect(screen.getByRole("button", { name: "themes" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    expect(screen.getByRole("group", { name: "theme" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: "solarized light" }),
+    ).toBeInTheDocument();
+  });
+
   it("switches to the customization section from the sidebar", async () => {
     const user = userEvent.setup();
     renderModal();
