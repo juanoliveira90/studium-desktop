@@ -75,6 +75,7 @@ cargo test                  # Rust tests — run from src-tauri/
   ```
 
 - Run regression tests after every code update. A new feature, refactor, or any update should not break any other test.
+- Care about alignment in every layout. Never give a container a fixed width/height without checking it fits its longest real content at the mono font metrics (~9px per character at `--fs`); prefer sizing to content. Text must never overflow its highlight/background box, and labels in a column must not wrap (wrapped lines re-center and break the shared left edge) — `white-space: nowrap` plus a container that actually fits.
 ### Don't
 - Don't remove a test just because it's not passing (unless changed core logic)
 - Don't make a commit if something is broken; each commit should be "production-ready"
